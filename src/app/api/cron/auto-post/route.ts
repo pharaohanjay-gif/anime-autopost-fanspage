@@ -44,28 +44,21 @@ async function performAutoPost() {
   console.log(`[Cron] Image URL: ${imageResult.url}`);
   console.log(`[Cron] Image source: ${imageResult.source}`);
 
-  // Special handling for hentai - if download fails, fallback to anime
+  // Special handling for hentai - directly fallback to anime for now
   if (category === 'hentai') {
-    console.log(`[Cron] Hentai category detected, attempting download...`);
-    try {
-      const testDownload = await downloadImageForTest(imageResult.url);
-      if (!testDownload) {
-        console.log(`[Cron] Hentai image download failed, falling back to anime...`);
-        // Force fallback to anime
-        const animeImage = await getRandomImage('anime');
-        if (animeImage) {
-          imageResult = animeImage;
-          category = 'anime';
-          console.log(`[Cron] Fallback successful: ${animeImage.title}`);
-        }
-      }
-    } catch (error) {
-      console.log(`[Cron] Hentai download test failed, falling back to anime...`);
-      const animeImage = await getRandomImage('anime');
-      if (animeImage) {
-        imageResult = animeImage;
-        category = 'anime';
-        console.log(`[Cron] Fallback successful: ${animeImage.title}`);
+    console.log(`[Cron] Hentai category detected, falling back to anime...`);
+    const animeImage = await getRandomImage('anime');
+    if (animeImage) {
+      imageResult = animeImage;
+      category = 'anime';
+      console.log(`[Cron] Fallback successful: ${animeImage.title}`);
+    } else {
+      console.log(`[Cron] Anime fallback failed, trying komik...`);
+      const komikImage = await getRandomImage('komik');
+      if (komikImage) {
+        imageResult = komikImage;
+        category = 'komik';
+        console.log(`[Cron] Komik fallback successful: ${komikImage.title}`);
       }
     }
   }
@@ -104,40 +97,6 @@ async function performAutoPost() {
     postId: result.id,
     caption: caption.substring(0, 200),
   };
-}
-
-// Test image download function
-async function downloadImageForTest(imageUrl: string): Promise<boolean> {
-  try {
-    const isProtectedDomain = imageUrl.includes('hanime') || 
-                               imageUrl.includes('htv-services') ||
-                               imageUrl.includes('hanime-cdn');
-    
-    const headers: any = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    };
-    
-    if (isProtectedDomain) {
-      headers['Referer'] = 'https://hanime.tv/';
-      headers['Origin'] = 'https://hanime.tv';
-      headers['Accept'] = 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8';
-    }
-    
-    const response = await fetch(imageUrl, {
-      method: 'GET',
-      headers: headers,
-    });
-    
-    if (!response.ok) {
-      return false;
-    }
-    
-    const buffer = await response.arrayBuffer();
-    return buffer.byteLength > 0;
-  } catch (error) {
-    console.error('Test download failed:', error);
-    return false;
-  }
 }
 
 export async function GET(request: NextRequest) {
