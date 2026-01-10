@@ -4,7 +4,6 @@ import { AnimeItem, KomikItem, HentaiItem, ImageResult } from '@/types';
 // Base API URLs - Using Jikan API (MyAnimeList) which is more stable
 const JIKAN_API = 'https://api.jikan.moe/v4';
 const KOMIK_API = 'https://api-manga-five.vercel.app';
-const HANIME_SEARCH_API = 'https://search.htv-services.com';
 
 // Helper function to add delay (Jikan has rate limit)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -263,42 +262,19 @@ export async function searchKomik(query: string): Promise<KomikItem[]> {
   }
 }
 
-// Hentai API Service (Hanime)
+// Hentai API Service (via server proxy to avoid CORS)
 export async function fetchRecentHentai(): Promise<HentaiItem[]> {
   try {
-    const response = await axios.post(HANIME_SEARCH_API, {
-      blacklist: [],
-      brands: [],
-      order_by: 'created_at_unix',
-      page: 0,
-      tags: [],
-      search_text: '',
-      tags_mode: 'AND',
-    }, {
-      headers: { 'Content-Type': 'application/json' },
+    // Use our own API proxy to avoid CORS issues
+    const response = await axios.get('/api/hentai', {
       timeout: 15000,
     });
     
-    const hits = JSON.parse(response.data?.hits || '[]');
+    if (response.data?.success && response.data?.data) {
+      return response.data.data;
+    }
     
-    return hits.slice(0, 20).map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      titles: item.titles || [],
-      slug: item.slug,
-      description: item.description || '',
-      views: item.views,
-      bannerImage: item.poster_url,
-      coverImage: item.cover_url,
-      cover_url: item.cover_url,
-      poster_url: item.poster_url,
-      brand: {
-        name: item.brand,
-        id: item.brand_id,
-      },
-      tags: item.tags || [],
-      rating: item.rating,
-    }));
+    return [];
   } catch (error) {
     console.error('Error fetching recent hentai:', error);
     return [];
@@ -307,39 +283,21 @@ export async function fetchRecentHentai(): Promise<HentaiItem[]> {
 
 export async function searchHentai(query: string): Promise<HentaiItem[]> {
   try {
-    const response = await axios.post(HANIME_SEARCH_API, {
-      blacklist: [],
-      brands: [],
-      order_by: 'created_at_unix',
+    // Use our own API proxy to avoid CORS issues
+    const response = await axios.post('/api/hentai', {
+      searchText: query,
       page: 0,
-      tags: [],
-      search_text: query,
-      tags_mode: 'AND',
+      orderBy: 'created_at_unix',
     }, {
       headers: { 'Content-Type': 'application/json' },
       timeout: 15000,
     });
     
-    const hits = JSON.parse(response.data?.hits || '[]');
+    if (response.data?.success && response.data?.data) {
+      return response.data.data;
+    }
     
-    return hits.slice(0, 20).map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      titles: item.titles || [],
-      slug: item.slug,
-      description: item.description || '',
-      views: item.views,
-      bannerImage: item.poster_url,
-      coverImage: item.cover_url,
-      cover_url: item.cover_url,
-      poster_url: item.poster_url,
-      brand: {
-        name: item.brand,
-        id: item.brand_id,
-      },
-      tags: item.tags || [],
-      rating: item.rating,
-    }));
+    return [];
   } catch (error) {
     console.error('Error searching hentai:', error);
     return [];
