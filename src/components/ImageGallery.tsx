@@ -56,7 +56,7 @@ export function ImageCard({ item, category, onSelect, selected }: ImageCardProps
             alt={title}
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = '/placeholder.png';
+              (e.target as HTMLImageElement).src = '/placeholder.svg';
             }}
           />
         ) : (

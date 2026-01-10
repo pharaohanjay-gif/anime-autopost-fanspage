@@ -39,7 +39,7 @@ const EditModal: React.FC<EditModalProps> = ({ post, isOpen, onClose, onSave }) 
                 alt={post.title}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/placeholder.png';
+                  (e.target as HTMLImageElement).src = '/placeholder.svg';
                 }}
               />
             </div>
@@ -207,7 +207,7 @@ export const RecentPostsPreview: React.FC = () => {
                   alt={post.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder.png';
+                    (e.target as HTMLImageElement).src = '/placeholder.svg';
                   }}
                 />
                 
