@@ -30,12 +30,6 @@ async function downloadImage(imageUrl: string): Promise<Buffer | null> {
           'Referer': 'https://hanime.tv/',
           'Origin': 'https://hanime.tv',
           'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-ch-ua-platform': '"Windows"',
-          'sec-fetch-dest': 'image',
-          'sec-fetch-mode': 'no-cors',
-          'sec-fetch-site': 'cross-site',
         },
         timeout: 30000,
       });
