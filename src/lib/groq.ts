@@ -63,6 +63,19 @@ const categoryContext: Record<string, string> = {
   hentai: 'Ini adalah konten anime dewasa (18+). Buat caption yang menggoda tapi tetap sopan, fokus ke art style dan story.',
 };
 
+// Helper function to strip HTML tags
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/&nbsp;/g, ' ') // Replace &nbsp;
+    .replace(/&amp;/g, '&')  // Replace &amp;
+    .replace(/&lt;/g, '<')   // Replace &lt;
+    .replace(/&gt;/g, '>')   // Replace &gt;
+    .replace(/&quot;/g, '"') // Replace &quot;
+    .replace(/\s+/g, ' ')    // Normalize whitespace
+    .trim();
+}
+
 export async function generateCaption(options: GenerateCaptionOptions): Promise<string> {
   const {
     title,
@@ -74,32 +87,36 @@ export async function generateCaption(options: GenerateCaptionOptions): Promise<
     additionalContext,
   } = options;
 
+  // Clean description from HTML
+  const cleanDescription = description ? stripHtml(description) : '';
+
   const systemPrompt = `Kamu adalah social media manager untuk fanspage Facebook bertema anime.
 Tugasmu adalah membuat caption yang menarik untuk postingan gambar anime/manga.
+
 ${stylePrompts[style]}
 
-ATURAN PENTING:
-1. Caption harus dalam Bahasa Indonesia
-2. Maksimal 280 karakter untuk caption utama (tidak termasuk hashtag)
-3. Caption harus relevan dengan judul dan deskripsi yang diberikan
-4. Jangan gunakan kata-kata kasar atau vulgar
-5. Buat caption yang engaging dan bisa mengundang interaksi
-${category === 'hentai' ? '6. Jangan terlalu eksplisit, fokus pada aspek artistik dan cerita' : ''}`;
+ATURAN WAJIB DIIKUTI:
+1. Caption HARUS dalam Bahasa Indonesia (campur slang boleh)
+2. JANGAN copy paste deskripsi asli - buat dengan kata-kata sendiri
+3. JANGAN pakai bahasa Inggris kecuali slang Jaksel
+4. Maksimal 200 karakter untuk caption utama
+5. Jangan gunakan kata-kata kasar atau vulgar
+6. JANGAN tampilkan tag HTML apapun
+${category === 'hentai' ? '7. Untuk konten dewasa: fokus ke art style dan cerita, jangan eksplisit' : ''}`;
 
-  const userPrompt = `Buatkan caption untuk postingan dengan detail berikut:
+  const userPrompt = `Buat caption ${style.toUpperCase()} untuk:
   
 Judul: ${title}
 Kategori: ${categoryContext[category]}
-${description ? `Deskripsi: ${description}` : ''}
-${additionalContext ? `Konteks tambahan: ${additionalContext}` : ''}
+${cleanDescription ? `Sinopsis: ${cleanDescription.substring(0, 200)}...` : ''}
+
+INGAT: Tulis dengan gaya ${style.toUpperCase()}, dalam BAHASA INDONESIA!
 
 ${includeHashtags ? `
-Tambahkan hashtag yang relevan di akhir caption.
-Hashtag wajib: #Anime #Otaku #Wibu
-${customHashtags.length > 0 ? `Hashtag custom: ${customHashtags.map(h => `#${h.replace('#', '')}`).join(' ')}` : ''}
-` : 'Jangan tambahkan hashtag.'}
+Hashtag: #Anime #Otaku #Wibu ${customHashtags.map(h => `#${h.replace('#', '')}`).join(' ')}
+` : ''}
 
-Berikan HANYA caption saja, tanpa penjelasan tambahan.`;
+Langsung tulis caption saja:`;
 
   try {
     const completion = await groq.chat.completions.create({
@@ -108,11 +125,13 @@ Berikan HANYA caption saja, tanpa penjelasan tambahan.`;
         { role: 'user', content: userPrompt },
       ],
       model: 'llama-3.3-70b-versatile',
-      temperature: 0.8,
-      max_tokens: 500,
+      temperature: 0.9,
+      max_tokens: 400,
     });
 
-    const caption = completion.choices[0]?.message?.content || '';
+    let caption = completion.choices[0]?.message?.content || '';
+    // Extra cleanup - remove any remaining HTML
+    caption = stripHtml(caption);
     return caption.trim();
   } catch (error) {
     console.error('Error generating caption with Groq:', error);
