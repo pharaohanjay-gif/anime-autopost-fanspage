@@ -8,8 +8,11 @@ const POSTING_RHYTHM: ('hentai' | 'anime' | 'komik')[] = ['hentai', 'anime', 'ko
 
 // Simple counter stored in edge config or we use hour-based rotation
 function getCategoryByHour(): 'hentai' | 'anime' | 'komik' {
-  const hour = new Date().getHours();
-  return POSTING_RHYTHM[hour % 3];
+  // Use WIB timezone (UTC+7)
+  const now = new Date();
+  const wibHour = (now.getUTCHours() + 7) % 24;
+  console.log(`[Cron] UTC hour: ${now.getUTCHours()}, WIB hour: ${wibHour}`);
+  return POSTING_RHYTHM[wibHour % 3];
 }
 
 async function performAutoPost() {
