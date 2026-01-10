@@ -13,16 +13,42 @@ interface FacebookPostResponse {
 async function downloadImage(imageUrl: string): Promise<Buffer | null> {
   try {
     console.log('Downloading image from:', imageUrl);
-    const response = await axios.get(imageUrl, {
-      responseType: 'arraybuffer',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://hanime.tv/',
-        'Origin': 'https://hanime.tv',
-        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-      },
-      timeout: 30000,
-    });
+    
+    // Check if image is from protected domain
+    const isProtectedDomain = imageUrl.includes('hanime') || 
+                               imageUrl.includes('htv-services') ||
+                               imageUrl.includes('hanime-cdn');
+    
+    let response;
+    if (isProtectedDomain) {
+      console.log('Protected domain detected, using special headers...');
+      // Use special headers to bypass hotlink protection
+      response = await axios.get(imageUrl, {
+        responseType: 'arraybuffer',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://hanime.tv/',
+          'Origin': 'https://hanime.tv',
+          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+          'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+          'sec-fetch-dest': 'image',
+          'sec-fetch-mode': 'no-cors',
+          'sec-fetch-site': 'cross-site',
+        },
+        timeout: 30000,
+      });
+    } else {
+      // For non-protected domains, download normally
+      response = await axios.get(imageUrl, {
+        responseType: 'arraybuffer',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+        timeout: 30000,
+      });
+    }
     
     const buffer = Buffer.from(response.data);
     console.log('Image downloaded successfully, size:', buffer.length, 'bytes');
