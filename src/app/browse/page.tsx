@@ -152,6 +152,24 @@ export default function BrowsePage() {
     } else if (category === 'komik') {
       return selectedItem.image || selectedItem.thumbnail || selectedItem.cover_image_url || '';
     } else {
+      const rawUrl = selectedItem.coverImage || selectedItem.cover_url || selectedItem.poster_url || '';
+      // Proxy hentai images to avoid hotlink protection
+      if (rawUrl) {
+        return `/api/image-proxy?url=${encodeURIComponent(rawUrl)}`;
+      }
+      return '';
+    }
+  };
+
+  // Get raw image URL (without proxy) for Facebook posting
+  const getRawImageUrl = () => {
+    if (!selectedItem) return '';
+    
+    if (category === 'anime') {
+      return selectedItem.image || selectedItem.thumbnail_url || selectedItem.poster || '';
+    } else if (category === 'komik') {
+      return selectedItem.image || selectedItem.thumbnail || selectedItem.cover_image_url || '';
+    } else {
       return selectedItem.coverImage || selectedItem.cover_url || selectedItem.poster_url || '';
     }
   };
@@ -215,7 +233,7 @@ export default function BrowsePage() {
         body: JSON.stringify({
           action: 'post-now',
           postData: {
-            imageUrl: getSelectedImageUrl(),
+            imageUrl: getRawImageUrl(), // Use raw URL for Facebook
             caption,
           },
         }),
@@ -251,7 +269,7 @@ export default function BrowsePage() {
     const newPost: ScheduledPost = {
       id: `post_${Date.now()}`,
       category,
-      imageUrl: getSelectedImageUrl(),
+      imageUrl: getRawImageUrl(), // Use raw URL for Facebook
       title: getSelectedTitle(),
       description: selectedItem.description || '',
       generatedCaption: caption,
