@@ -145,14 +145,61 @@ export async function postToWeebnesia(
       success: true,
     };
   } catch (error: any) {
-    const errorMessage = error.response?.data?.error?.message || error.message;
-    console.error('Error posting to Facebook:', error.response?.data || error.message);
+    // Try fallback method for all cases
+    console.log('Primary method failed, trying fallback download method...', error.message);
     
-    return {
-      id: '',
-      success: false,
-      error: errorMessage,
-    };
+    try {
+      const imageBuffer = await downloadImage(imageUrl);
+      
+      if (!imageBuffer) {
+        const errorMessage = error.response?.data?.error?.message || error.message;
+        return {
+          id: '',
+          success: false,
+          error: errorMessage,
+        };
+      }
+      
+      console.log('Image downloaded via fallback, size:', imageBuffer.length, 'bytes');
+      
+      // Create form data with image buffer
+      const formData = new FormData();
+      formData.append('source', imageBuffer, {
+        filename: 'image.jpg',
+        contentType: 'image/jpeg',
+      });
+      formData.append('message', caption);
+      formData.append('access_token', ACCESS_TOKEN);
+      
+      const fallbackResponse = await axios.post(
+        `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+          },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+        }
+      );
+      
+      console.log('Fallback Facebook API Response:', fallbackResponse.data);
+      
+      return {
+        id: fallbackResponse.data.id,
+        post_id: fallbackResponse.data.post_id || fallbackResponse.data.id,
+        success: true,
+      };
+    } catch (fallbackError: any) {
+      const errorMessage = error.response?.data?.error?.message || error.message;
+      console.error('Both methods failed:', errorMessage);
+      
+      return {
+        id: '',
+        success: false,
+        error: errorMessage,
+      };
+    }
   }
 }
 
