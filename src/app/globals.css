@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 15, 15, 26;
+  --background-end-rgb: 26, 26, 46;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff6b9d, #c44dff);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff8ab3, #d46fff);
+}
+
+/* Card Hover Effects */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(255, 107, 157, 0.2);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(90deg, #ff6b9d, #c44dff, #4d79ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Button Styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-anime-pink to-anime-purple text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 hover:opacity-90 hover:shadow-lg hover:shadow-anime-pink/30;
+}
+
+.btn-secondary {
+  @apply bg-anime-dark border border-anime-purple/50 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 hover:bg-anime-purple/20 hover:border-anime-purple;
+}
+
+/* Input Styles */
+.input-field {
+  @apply bg-anime-darker border border-anime-purple/30 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-anime-purple focus:ring-1 focus:ring-anime-purple/50 transition-all duration-300;
+}
+
+/* Loading Animation */
+.loading-spinner {
+  border: 3px solid rgba(255, 107, 157, 0.2);
+  border-top-color: #ff6b9d;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(26, 26, 46, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 107, 157, 0.1);
+}
