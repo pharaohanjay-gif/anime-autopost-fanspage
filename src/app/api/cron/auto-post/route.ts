@@ -110,7 +110,35 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Also support POST for manual trigger
+// Test endpoint for specific category
 export async function POST(request: NextRequest) {
-  return GET(request);
+  try {
+    const body = await request.json();
+    const { category } = body;
+    
+    console.log(`[Test] Testing category: ${category}`);
+    
+    // Override category for testing
+    const originalGetCategory = getCategoryByHour;
+    getCategoryByHour = () => category || 'anime';
+    
+    const result = await performAutoPost();
+    
+    // Restore original function
+    getCategoryByHour = originalGetCategory;
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Test post successful',
+      ...result,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    console.error('[Test] Error:', error.message);
+    return NextResponse.json({
+      success: false,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    }, { status: 500 });
+  }
 }
