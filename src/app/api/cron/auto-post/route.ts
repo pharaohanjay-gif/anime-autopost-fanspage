@@ -39,6 +39,7 @@ async function performAutoPost() {
 
   console.log(`[Cron] Image found: ${imageResult.title}`);
   console.log(`[Cron] Image URL: ${imageResult.url}`);
+  console.log(`[Cron] Image source: ${imageResult.source}`);
 
   // Generate caption with Jaksel style
   let caption: string;
@@ -60,9 +61,11 @@ async function performAutoPost() {
   }
 
   // Post to Facebook
+  console.log(`[Cron] Attempting to post to Facebook...`);
   const result = await postToWeebnesia(imageResult.url, caption);
 
   if (!result.success) {
+    console.error(`[Cron] Facebook post failed: ${result.error}`);
     throw new Error(result.error || 'Failed to post to Facebook');
   }
 

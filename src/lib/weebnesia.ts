@@ -12,6 +12,7 @@ interface FacebookPostResponse {
 // Download image and convert to buffer
 async function downloadImage(imageUrl: string): Promise<Buffer | null> {
   try {
+    console.log('Downloading image from:', imageUrl);
     const response = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
       headers: {
@@ -22,9 +23,21 @@ async function downloadImage(imageUrl: string): Promise<Buffer | null> {
       },
       timeout: 30000,
     });
-    return Buffer.from(response.data);
+    
+    const buffer = Buffer.from(response.data);
+    console.log('Image downloaded successfully, size:', buffer.length, 'bytes');
+    console.log('Content-Type:', response.headers['content-type']);
+    
+    // Validate image buffer
+    if (buffer.length === 0) {
+      console.error('Downloaded image buffer is empty');
+      return null;
+    }
+    
+    return buffer;
   } catch (error: any) {
     console.error('Error downloading image:', error.message);
+    console.error('Error details:', error.response?.status, error.response?.statusText);
     return null;
   }
 }
@@ -53,6 +66,7 @@ export async function postToWeebnesia(
       const imageBuffer = await downloadImage(imageUrl);
       
       if (!imageBuffer) {
+        console.error('Failed to download image from protected source');
         return {
           id: '',
           success: false,
@@ -71,6 +85,7 @@ export async function postToWeebnesia(
       formData.append('message', caption);
       formData.append('access_token', ACCESS_TOKEN);
       
+      console.log('Uploading to Facebook...');
       const response = await axios.post(
         `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
         formData,
