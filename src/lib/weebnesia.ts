@@ -1,4 +1,5 @@
 import axios from 'axios';
+import FormData from 'form-data';
 import { FACEBOOK_CONFIG } from './config';
 
 interface FacebookPostResponse {
@@ -6,6 +7,26 @@ interface FacebookPostResponse {
   post_id?: string;
   success: boolean;
   error?: string;
+}
+
+// Download image and convert to buffer
+async function downloadImage(imageUrl: string): Promise<Buffer | null> {
+  try {
+    const response = await axios.get(imageUrl, {
+      responseType: 'arraybuffer',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://hanime.tv/',
+        'Origin': 'https://hanime.tv',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+      },
+      timeout: 30000,
+    });
+    return Buffer.from(response.data);
+  } catch (error: any) {
+    console.error('Error downloading image:', error.message);
+    return null;
+  }
 }
 
 // Post photo with caption to Weebnesia Facebook Page
@@ -20,6 +41,58 @@ export async function postToWeebnesia(
     console.log('Image URL:', imageUrl);
     console.log('Caption length:', caption.length);
     
+    // Check if image is from a protected domain
+    const isProtectedDomain = imageUrl.includes('hanime') || 
+                               imageUrl.includes('htv-services') ||
+                               imageUrl.includes('hanime-cdn');
+    
+    if (isProtectedDomain) {
+      console.log('Protected domain detected, downloading image first...');
+      
+      // Download image first
+      const imageBuffer = await downloadImage(imageUrl);
+      
+      if (!imageBuffer) {
+        return {
+          id: '',
+          success: false,
+          error: 'Failed to download image from protected source',
+        };
+      }
+      
+      console.log('Image downloaded, size:', imageBuffer.length, 'bytes');
+      
+      // Create form data with image buffer
+      const formData = new FormData();
+      formData.append('source', imageBuffer, {
+        filename: 'image.jpg',
+        contentType: 'image/jpeg',
+      });
+      formData.append('message', caption);
+      formData.append('access_token', ACCESS_TOKEN);
+      
+      const response = await axios.post(
+        `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+          },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+        }
+      );
+      
+      console.log('Facebook API Response:', response.data);
+      
+      return {
+        id: response.data.id,
+        post_id: response.data.post_id || response.data.id,
+        success: true,
+      };
+    }
+    
+    // For non-protected URLs, use direct URL posting
     const response = await axios.post(
       `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
       {
