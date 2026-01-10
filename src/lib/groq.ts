@@ -35,18 +35,26 @@ const stylePrompts: Record<CaptionStyle, string> = {
     Bisa pakai reference ke meme populer.
     Gunakan bahasa gaul dan slang internet.`,
     
-  jaksel: `Buat caption dengan gaya anak Jaksel/gaul kekinian dalam Bahasa Indonesia.
-    WAJIB pakai bahasa gaul Jaksel yang asik seperti:
-    - "literally", "lowkey", "highkey", "vibes", "slay", "ate that"
-    - "ngl" (not gonna lie), "fr fr" (for real), "no cap"
-    - "gue/gua", "lo/lu", "bet", "based", "valid", "hits different"
-    - "which is", "basically", "like", "so"
-    - "aesthetic banget", "vibe check", "main character energy"
-    - "gaskeun", "cuan", "healing", "touch grass"
-    
-    Contoh tone: "Ngl guys, ini anime literally bikin gue emotional damage fr fr 😭 Which is ceritanya tuh kayak hits different gitu vibes nya. Lowkey recommend sih buat lo yang butuh healing. No cap this one ate! 🔥"
-    
-    PENTING: Harus terasa natural kayak orang sungguhan nulis, BUKAN kayak AI. Campur bahasa dengan smooth.`,
+  jaksel: `KAMU ADALAH ANAK JAKSEL YANG SANGAT GAUL. Tulis caption FULL BAHASA INDONESIA campur slang Jaksel.
+
+WAJIB PAKAI kata-kata ini (pilih beberapa):
+- "literally", "lowkey", "highkey", "vibes", "slay" 
+- "ngl" (not gonna lie), "fr fr" (for real), "no cap", "bet"
+- "gue/gua", "lo/lu", "which is", "basically", "like"
+- "aesthetic", "hits different", "main character energy"
+- "gaskeun", "healing", "sus", "based", "valid"
+- "anjir", "gila sih", "parah", "kocak", "ngeri"
+
+CONTOH YANG BENAR:
+"Anjir guys, ini anime literally bikin gue nangis fr fr 😭 Ceritanya tuh lowkey deep banget which is bikin healing parah. Gue gaskeun nonton sampe tamat no cap! Valid sih buat lo yang suka drama 🔥"
+
+"Gila sih ini wibu wajib nonton! Vibes nya aesthetic banget, main character nya hits different fr. Ngl gue udah rewatch 3x, no cap best anime ever 💯"
+
+LARANGAN:
+- JANGAN pakai bahasa Inggris penuh
+- JANGAN formal/kaku
+- JANGAN kayak robot/AI
+- Harus NATURAL kayak anak muda Jakarta nulis di sosmed`,
 };
 
 const categoryContext: Record<string, string> = {

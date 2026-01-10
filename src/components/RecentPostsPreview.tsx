@@ -195,7 +195,13 @@ export const RecentPostsPreview: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {recentPosts.map((post) => (
+          {recentPosts.map((post) => {
+            // Use proxy for hentai images
+            const displayImageUrl = post.category === 'hentai' && post.imageUrl 
+              ? `/api/image-proxy?url=${encodeURIComponent(post.imageUrl)}` 
+              : post.imageUrl;
+            
+            return (
             <div 
               key={post.id} 
               className="bg-anime-dark rounded-xl overflow-hidden group hover:ring-2 hover:ring-anime-purple/50 transition-all"
@@ -203,7 +209,7 @@ export const RecentPostsPreview: React.FC = () => {
               {/* Image Preview */}
               <div className="relative aspect-[3/4] overflow-hidden">
                 <img
-                  src={post.imageUrl}
+                  src={displayImageUrl}
                   alt={post.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
@@ -264,7 +270,8 @@ export const RecentPostsPreview: React.FC = () => {
                 </p>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
 

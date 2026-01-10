@@ -194,7 +194,7 @@ export function SelectedImagePreview({
           <div>
             <label className="block text-sm text-gray-400 mb-2">Caption Style</label>
             <div className="flex flex-wrap gap-2">
-              {(['formal', 'casual', 'otaku', 'meme'] as CaptionStyle[]).map((style) => (
+              {(['jaksel', 'casual', 'otaku', 'meme', 'formal'] as CaptionStyle[]).map((style) => (
                 <button
                   key={style}
                   onClick={() => onStyleChange(style)}
@@ -206,7 +206,7 @@ export function SelectedImagePreview({
                     }
                   `}
                 >
-                  {style.charAt(0).toUpperCase() + style.slice(1)}
+                  {style === 'jaksel' ? '🔥 Jaksel' : style.charAt(0).toUpperCase() + style.slice(1)}
                 </button>
               ))}
             </div>

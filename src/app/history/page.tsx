@@ -91,7 +91,7 @@ export default function HistoryPage() {
                   {/* Image Preview */}
                   <div className="w-20 h-20 rounded-lg overflow-hidden bg-anime-darker flex-shrink-0">
                     <img
-                      src={post.imageUrl}
+                      src={post.category === 'hentai' && post.imageUrl ? `/api/image-proxy?url=${encodeURIComponent(post.imageUrl)}` : post.imageUrl}
                       alt={post.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {

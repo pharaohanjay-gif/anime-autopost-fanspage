@@ -34,6 +34,8 @@ export default function BrowsePage() {
     settings, 
     categories,
     addScheduledPost,
+    addPostHistory,
+    addPostedImageUrl,
     incrementTotalPosts,
     incrementSuccessfulPosts,
     incrementFailedPosts
@@ -46,7 +48,7 @@ export default function BrowsePage() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [caption, setCaption] = useState('');
-  const [captionStyle, setCaptionStyle] = useState<CaptionStyle>(settings.captionStyle);
+  const [captionStyle, setCaptionStyle] = useState<CaptionStyle>('jaksel'); // Default to Jaksel
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -243,17 +245,57 @@ export default function BrowsePage() {
       
       if (data.success) {
         toast.success('Posted to Weebnesia successfully! 🎉');
+        
+        // Save to client-side history
+        addPostHistory({
+          id: `history_${Date.now()}`,
+          category,
+          imageUrl: getRawImageUrl(),
+          title: getSelectedTitle(),
+          caption,
+          status: 'success',
+          facebookPostId: data.postId,
+          postedAt: new Date(),
+        });
+        addPostedImageUrl(getRawImageUrl());
+        
         incrementTotalPosts();
         incrementSuccessfulPosts();
         setSelectedItem(null);
         setCaption('');
       } else {
         toast.error(data.error || 'Failed to post');
+        
+        // Save failed attempt to history
+        addPostHistory({
+          id: `history_${Date.now()}`,
+          category,
+          imageUrl: getRawImageUrl(),
+          title: getSelectedTitle(),
+          caption,
+          status: 'failed',
+          error: data.error,
+          postedAt: new Date(),
+        });
+        
         incrementTotalPosts();
         incrementFailedPosts();
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.error('Failed to post');
+      
+      // Save failed attempt to history  
+      addPostHistory({
+        id: `history_${Date.now()}`,
+        category,
+        imageUrl: getRawImageUrl(),
+        title: getSelectedTitle(),
+        caption,
+        status: 'failed',
+        error: error.message || 'Network error',
+        postedAt: new Date(),
+      });
+      
       incrementTotalPosts();
       incrementFailedPosts();
     }
