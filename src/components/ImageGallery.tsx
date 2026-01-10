@@ -24,7 +24,12 @@ export function ImageCard({ item, category, onSelect, selected }: ImageCardProps
       return komikItem.image || komikItem.thumbnail || komikItem.cover_image_url || '';
     } else {
       const hentaiItem = item as HentaiItem;
-      return hentaiItem.coverImage || hentaiItem.cover_url || hentaiItem.poster_url || '';
+      const rawUrl = hentaiItem.coverImage || hentaiItem.cover_url || hentaiItem.poster_url || '';
+      // Proxy hentai images to avoid hotlink protection
+      if (rawUrl) {
+        return `/api/image-proxy?url=${encodeURIComponent(rawUrl)}`;
+      }
+      return '';
     }
   };
 
