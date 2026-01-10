@@ -12,6 +12,68 @@ function getCategoryByHour(): 'hentai' | 'anime' | 'komik' {
   return POSTING_RHYTHM[hour % 3];
 }
 
+async function performAutoPost() {
+  // Get category based on current hour (rotates hentai → anime → komik)
+  let category = getCategoryByHour();
+  console.log(`[Cron] Category for this hour: ${category}`);
+
+  // Get random image with fallback to other categories
+  let imageResult = await getRandomImage(category);
+  
+  // If no image from primary category, try others
+  if (!imageResult) {
+    console.log(`[Cron] No image from ${category}, trying fallback categories...`);
+    for (const fallbackCategory of POSTING_RHYTHM.filter(c => c !== category)) {
+      imageResult = await getRandomImage(fallbackCategory);
+      if (imageResult) {
+        category = fallbackCategory;
+        console.log(`[Cron] Found image from fallback category: ${fallbackCategory}`);
+        break;
+      }
+    }
+  }
+
+  if (!imageResult) {
+    throw new Error('No image found from any category');
+  }
+
+  console.log(`[Cron] Image found: ${imageResult.title}`);
+  console.log(`[Cron] Image URL: ${imageResult.url}`);
+
+  // Generate caption with Jaksel style
+  let caption: string;
+  try {
+    caption = await generateCaption({
+      title: imageResult.title,
+      description: imageResult.description || '',
+      category: category,
+      style: 'jaksel',
+      includeHashtags: true,
+      customHashtags: ['Weebnesia', 'AnimeIndonesia', 'WibuNation'],
+    });
+    console.log(`[Cron] Caption generated: ${caption.substring(0, 100)}...`);
+  } catch (captionError: any) {
+    console.error(`[Cron] Caption generation failed: ${captionError.message}`);
+    // Use fallback caption
+    caption = `🔥 ${imageResult.title}\n\nYuk check out which satu ini, literally keren banget sih!\n\n#Weebnesia #AnimeIndonesia #WibuNation`;
+    console.log(`[Cron] Using fallback caption`);
+  }
+
+  // Post to Facebook
+  const result = await postToWeebnesia(imageResult.url, caption);
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to post to Facebook');
+  }
+
+  return {
+    category,
+    title: imageResult.title,
+    postId: result.id,
+    caption: caption.substring(0, 200),
+  };
+}
+
 export async function GET(request: NextRequest) {
   // Verify the request is from Vercel Cron
   const authHeader = request.headers.get('authorization');
@@ -22,65 +84,25 @@ export async function GET(request: NextRequest) {
 
   try {
     console.log('[Cron] Starting auto-post...');
+    console.log(`[Cron] Environment check - GROQ_API_KEY: ${process.env.GROQ_API_KEY ? 'SET' : 'NOT SET'}`);
+    console.log(`[Cron] Environment check - FB_PAGE_ACCESS_TOKEN: ${process.env.FB_PAGE_ACCESS_TOKEN ? 'SET' : 'NOT SET'}`);
     
-    // Get category based on current hour (rotates hentai → anime → komik)
-    const category = getCategoryByHour();
-    console.log(`[Cron] Category for this hour: ${category}`);
+    const result = await performAutoPost();
 
-    // Get random image
-    const imageResult = await getRandomImage(category);
-    
-    if (!imageResult) {
-      console.error('[Cron] No image found');
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No image found',
-        category 
-      }, { status: 500 });
-    }
-
-    console.log(`[Cron] Image found: ${imageResult.title}`);
-    console.log(`[Cron] Image URL: ${imageResult.url}`);
-
-    // Generate caption with Jaksel style
-    const caption = await generateCaption({
-      title: imageResult.title,
-      description: imageResult.description || '',
-      category: category,
-      style: 'jaksel',
-      includeHashtags: true,
-      customHashtags: ['Weebnesia', 'AnimeIndonesia', 'WibuNation'],
+    console.log(`[Cron] Posted successfully! Post ID: ${result.postId}`);
+    return NextResponse.json({
+      success: true,
+      message: 'Auto-post successful',
+      ...result,
+      timestamp: new Date().toISOString(),
     });
-
-    console.log(`[Cron] Caption generated: ${caption.substring(0, 100)}...`);
-
-    // Post to Facebook
-    const result = await postToWeebnesia(imageResult.url, caption);
-
-    if (result.success) {
-      console.log(`[Cron] Posted successfully! Post ID: ${result.id}`);
-      return NextResponse.json({
-        success: true,
-        message: 'Auto-post successful',
-        category,
-        title: imageResult.title,
-        postId: result.id,
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      console.error(`[Cron] Failed to post: ${result.error}`);
-      return NextResponse.json({
-        success: false,
-        error: result.error,
-        category,
-        title: imageResult.title,
-      }, { status: 500 });
-    }
   } catch (error: any) {
     console.error('[Cron] Error:', error.message);
+    console.error('[Cron] Stack:', error.stack);
     return NextResponse.json({
       success: false,
       error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     }, { status: 500 });
   }
 }

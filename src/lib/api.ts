@@ -262,42 +262,132 @@ export async function searchKomik(query: string): Promise<KomikItem[]> {
   }
 }
 
-// Hentai API Service (via server proxy to avoid CORS)
+// Hentai API Service - direct call for server-side, proxy for client-side
+const HANIME_SEARCH_API = 'https://search.htv-services.com';
+
+async function fetchHentaiDirect(): Promise<HentaiItem[]> {
+  const response = await axios.post(HANIME_SEARCH_API, {
+    blacklist: [],
+    brands: [],
+    order_by: 'created_at_unix',
+    page: 0,
+    tags: [],
+    search_text: '',
+    tags_mode: 'AND',
+  }, {
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 15000,
+  });
+
+  const hits = JSON.parse(response.data?.hits || '[]');
+
+  return hits.slice(0, 20).map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    titles: item.titles || [],
+    slug: item.slug,
+    description: item.description || '',
+    views: item.views,
+    bannerImage: item.poster_url,
+    coverImage: item.cover_url,
+    cover_url: item.cover_url,
+    poster_url: item.poster_url,
+    brand: {
+      name: item.brand,
+      id: item.brand_id,
+    },
+    tags: item.tags || [],
+    rating: item.rating,
+  }));
+}
+
 export async function fetchRecentHentai(): Promise<HentaiItem[]> {
   try {
-    // Use our own API proxy to avoid CORS issues
-    const response = await axios.get('/api/hentai', {
-      timeout: 15000,
-    });
+    // Check if running on server-side (no window object)
+    const isServer = typeof window === 'undefined';
     
-    if (response.data?.success && response.data?.data) {
-      return response.data.data;
+    if (isServer) {
+      // Direct API call on server-side
+      return await fetchHentaiDirect();
+    } else {
+      // Use proxy on client-side to avoid CORS
+      const response = await axios.get('/api/hentai', {
+        timeout: 15000,
+      });
+      
+      if (response.data?.success && response.data?.data) {
+        return response.data.data;
+      }
+      
+      return [];
     }
-    
-    return [];
   } catch (error) {
     console.error('Error fetching recent hentai:', error);
     return [];
   }
 }
 
+async function searchHentaiDirect(query: string): Promise<HentaiItem[]> {
+  const response = await axios.post(HANIME_SEARCH_API, {
+    blacklist: [],
+    brands: [],
+    order_by: 'created_at_unix',
+    page: 0,
+    tags: [],
+    search_text: query,
+    tags_mode: 'AND',
+  }, {
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 15000,
+  });
+
+  const hits = JSON.parse(response.data?.hits || '[]');
+
+  return hits.slice(0, 20).map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    titles: item.titles || [],
+    slug: item.slug,
+    description: item.description || '',
+    views: item.views,
+    bannerImage: item.poster_url,
+    coverImage: item.cover_url,
+    cover_url: item.cover_url,
+    poster_url: item.poster_url,
+    brand: {
+      name: item.brand,
+      id: item.brand_id,
+    },
+    tags: item.tags || [],
+    rating: item.rating,
+  }));
+}
+
 export async function searchHentai(query: string): Promise<HentaiItem[]> {
   try {
-    // Use our own API proxy to avoid CORS issues
-    const response = await axios.post('/api/hentai', {
-      searchText: query,
-      page: 0,
-      orderBy: 'created_at_unix',
-    }, {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 15000,
-    });
+    // Check if running on server-side
+    const isServer = typeof window === 'undefined';
     
-    if (response.data?.success && response.data?.data) {
-      return response.data.data;
+    if (isServer) {
+      // Direct API call on server-side
+      return await searchHentaiDirect(query);
+    } else {
+      // Use proxy on client-side to avoid CORS
+      const response = await axios.post('/api/hentai', {
+        searchText: query,
+        page: 0,
+        orderBy: 'created_at_unix',
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 15000,
+      });
+      
+      if (response.data?.success && response.data?.data) {
+        return response.data.data;
+      }
+      
+      return [];
     }
-    
-    return [];
   } catch (error) {
     console.error('Error searching hentai:', error);
     return [];
