@@ -141,55 +141,41 @@ export function BotStatus({
   return (
     <div className="glass rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Bot Status</h3>
+        <h3 className="text-lg font-semibold text-white">Auto Post</h3>
         <button
           onClick={onToggle}
-          className={`
-            flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
-            ${isRunning 
-              ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30' 
-              : 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30'
-            }
-          `}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-gradient-to-r from-anime-pink to-anime-purple text-white hover:opacity-90"
         >
-          {isRunning ? (
-            <>
-              <Pause size={18} />
-              Stop Bot
-            </>
-          ) : (
-            <>
-              <Play size={18} />
-              Start Bot
-            </>
-          )}
+          <Play size={18} />
+          Post Sekarang!
         </button>
       </div>
       
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`
-          w-3 h-3 rounded-full 
-          ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}
-        `} />
-        <span className={isRunning ? 'text-green-400' : 'text-gray-400'}>
-          {isRunning ? 'Running' : 'Stopped'}
-        </span>
-      </div>
-      
-      {isRunning && (
-        <div className="space-y-2 text-sm">
-          {lastPostTime && (
-            <p className="text-gray-400">
-              Last post: <span className="text-white">{lastPostTime.toLocaleString('id-ID')}</span>
-            </p>
-          )}
-          {nextPostTime && (
-            <p className="text-gray-400">
-              Next post: <span className="text-anime-pink">{nextPostTime.toLocaleString('id-ID')}</span>
-            </p>
-          )}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 p-3 bg-anime-dark rounded-lg">
+          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+          <div>
+            <p className="text-white font-medium">Vercel Cron Aktif</p>
+            <p className="text-gray-400 text-sm">Auto post setiap hari jam 8 pagi WIB</p>
+          </div>
         </div>
-      )}
+        
+        <div className="p-3 bg-anime-dark rounded-lg">
+          <p className="text-gray-400 text-sm mb-2">💡 Mau lebih sering auto post?</p>
+          <p className="text-gray-500 text-xs">
+            Gunakan <a href="https://cron-job.org" target="_blank" rel="noopener noreferrer" className="text-anime-pink hover:underline">cron-job.org</a> (gratis) untuk memanggil:
+          </p>
+          <code className="block mt-2 p-2 bg-anime-darker rounded text-xs text-anime-purple break-all">
+            https://botautopost-seven.vercel.app/api/cron/auto-post
+          </code>
+        </div>
+        
+        {lastPostTime && (
+          <p className="text-gray-400 text-sm">
+            Post terakhir: <span className="text-white">{lastPostTime.toLocaleString('id-ID')}</span>
+          </p>
+        )}
+      </div>
     </div>
   );
 }

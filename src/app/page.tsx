@@ -64,36 +64,38 @@ export default function Home() {
     setLoading(false);
   };
 
-  const handleToggleBot = async () => {
+  const handleAutoPost = async () => {
     try {
-      const response = await fetch('/api/bot', {
+      toast.loading('Posting otomatis...', { id: 'autopost' });
+      
+      const response = await fetch('/api/cron/auto-post', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: isRunning ? 'stop' : 'start',
-          settings: {
-            ...settings,
-            enabledCategories: ['anime', 'komik', 'hentai'].filter(cat => 
-              settings.enabledCategories?.includes(cat) ?? true
-            ),
-          },
-        }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setIsRunning(!isRunning);
-        toast.success(isRunning ? 'Bot stopped' : `Bot started! Posting to ${data.pageName || 'Weebnesia'}`);
-        if (!isRunning) {
-          setLastPostTime(new Date());
-        }
+        toast.success(`Berhasil post: ${data.title}`, { id: 'autopost' });
+        incrementTotalPosts();
+        incrementSuccessfulPosts();
+        setLastPostTime(new Date());
+        // Reload to show latest
+        loadImages();
       } else {
-        toast.error(data.error || 'Failed to toggle bot');
+        toast.error(data.error || 'Gagal auto post', { id: 'autopost' });
+        incrementTotalPosts();
+        incrementFailedPosts();
       }
     } catch (error) {
-      toast.error('Failed to toggle bot');
+      toast.error('Gagal auto post', { id: 'autopost' });
+      incrementTotalPosts();
+      incrementFailedPosts();
     }
+  };
+
+  const handleToggleBot = async () => {
+    // Manual trigger auto post instead of old bot system
+    await handleAutoPost();
   };
 
   const pendingPosts = scheduledPosts.filter(p => p.status === 'pending').length;
