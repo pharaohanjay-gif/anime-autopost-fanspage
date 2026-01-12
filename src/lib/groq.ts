@@ -268,8 +268,14 @@ Berikan output dalam format JSON yang valid.`;
     };
   } catch (error) {
     console.error('Error analyzing image:', error);
+    // Fallback dengan Jaksel style
+    const fallbacks = [
+      `Woy bestie, ${existingTitle} ini literally bagus bgt dah!`,
+      `Ngl guys ${existingTitle} bikin gue healing parah fr fr`,
+      `Anjir ${existingTitle} ini lowkey underrated bgt sih!`,
+    ];
     return {
-      caption: `✨ ${existingTitle} ✨\n\n${existingDescription || 'Cek konten anime keren ini!'}`,
+      caption: fallbacks[Math.floor(Math.random() * fallbacks.length)],
       suggestedHashtags: ['Anime', 'Otaku', 'Wibu'],
     };
   }
