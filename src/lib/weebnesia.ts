@@ -104,6 +104,7 @@ export async function postToWeebnesia(
       });
       formData.append('message', caption);
       formData.append('access_token', ACCESS_TOKEN);
+      formData.append('published', 'true'); // Pastikan posting publik
       
       console.log('Uploading to Facebook...');
       const response = await axios.post(
@@ -134,6 +135,7 @@ export async function postToWeebnesia(
         url: imageUrl,
         message: caption,
         access_token: ACCESS_TOKEN,
+        published: true, // Pastikan posting publik
       }
     );
     
@@ -170,6 +172,7 @@ export async function postToWeebnesia(
       });
       formData.append('message', caption);
       formData.append('access_token', ACCESS_TOKEN);
+      formData.append('published', 'true'); // Pastikan posting publik
       
       const fallbackResponse = await axios.post(
         `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
@@ -213,6 +216,7 @@ export async function postTextToWeebnesia(message: string): Promise<FacebookPost
       {
         message: message,
         access_token: ACCESS_TOKEN,
+        published: true, // Pastikan posting publik
       }
     );
     
