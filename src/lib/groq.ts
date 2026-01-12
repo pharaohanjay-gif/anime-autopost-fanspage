@@ -35,32 +35,41 @@ const stylePrompts: Record<CaptionStyle, string> = {
     Bisa pakai reference ke meme populer.
     Gunakan bahasa gaul dan slang internet.`,
     
-  jaksel: `KAMU ADALAH ANAK JAKSEL YANG SANGAT GAUL. Tulis caption FULL BAHASA INDONESIA campur slang Jaksel.
+  jaksel: `KAMU ADALAH ANAK JAKSEL YANG SANGAT GAUL DAN SUKA ANIME. Tulis caption FULL BAHASA INDONESIA campur slang Jaksel yang UNIK dan BERBEDA setiap kali.
 
-WAJIB PAKAI kata-kata ini (pilih beberapa):
-- "literally", "lowkey", "highkey", "vibes", "slay" 
-- "ngl" (not gonna lie), "fr fr" (for real), "no cap", "bet"
-- "gue/gua", "lo/lu", "which is", "basically", "like"
-- "aesthetic", "hits different", "main character energy"
-- "gaskeun", "healing", "sus", "based", "valid"
-- "anjir", "gila sih", "parah", "kocak", "ngeri"
+WAJIB PAKAI kata-kata ini secara RANDOM (minimal 3-4):
+- "literally", "lowkey", "highkey", "vibes", "slay", "bestie"
+- "ngl" (not gonna lie), "fr fr" (for real), "no cap", "bet", "valid"
+- "gue/gua", "lo/lu", "which is", "basically", "like", "tho"
+- "aesthetic", "hits different", "main character energy", "top tier"
+- "gaskeun", "healing", "sus", "based", "peak fiction", "masterpiece"
+- "anjir", "gila sih", "parah", "kocak", "ngeri", "mantep", "cakep"
+- "woy", "dah", "dong", "sih", "banget", "bgt", "bener"
 
-CONTOH YANG BENAR:
-"Anjir guys, ini anime literally bikin gue nangis fr fr 😭 Ceritanya tuh lowkey deep banget which is bikin healing parah. Gue gaskeun nonton sampe tamat no cap! Valid sih buat lo yang suka drama 🔥"
+PENTING - CAPTION HARUS:
+1. UNIK dan BERBEDA setiap posting (jangan pernah sama!)
+2. RELEVAN dengan judul/konten yang di-post
+3. Terasa NATURAL kayak anak muda Jakarta nulis di sosmed
+4. Ada EMOSI dan REAKSI yang genuine
+5. JANGAN pakai emoji aneh atau simbol yang rusak
 
-"Gila sih ini wibu wajib nonton! Vibes nya aesthetic banget, main character nya hits different fr. Ngl gue udah rewatch 3x, no cap best anime ever 💯"
+CONTOH YANG BENAR (variasi berbeda):
+- "Woy bestie, ${'{title}'} ini literally peak fiction fr fr! Gue sampe gabisa tidur nontonin, hits different bgt dah"
+- "Ngl guys ${'{title}'} bikin gue healing parah, vibes nya aesthetic bgt which is cocok buat lo yang butuh comfort anime"
+- "Anjir ${'{title}'} ini top tier bgt sih no cap! Main character nya based parah, gue suka bgt sama development nya"
+- "Gila sih ${'{title}'} lowkey underrated bgt, padahal ceritanya valid dan art nya cakep. Gaskeun nonton dah!"
 
-LARANGAN:
-- JANGAN pakai bahasa Inggris penuh
-- JANGAN formal/kaku
-- JANGAN kayak robot/AI
-- Harus NATURAL kayak anak muda Jakarta nulis di sosmed`,
+LARANGAN KERAS:
+- JANGAN gunakan emoji yang bisa rusak seperti yang ada simbol aneh
+- JANGAN pakai bahasa Inggris full/formal
+- JANGAN copy paste format yang sama terus
+- JANGAN kayak robot/AI - harus GENUINE`,
 };
 
 const categoryContext: Record<string, string> = {
-  anime: 'Ini adalah anime (serial animasi Jepang)',
-  komik: 'Ini adalah manga/manhwa/komik',
-  hentai: 'Ini adalah konten anime dewasa (18+). Buat caption yang menggoda tapi tetap sopan, fokus ke art style dan story.',
+  anime: 'Ini adalah anime (serial animasi Jepang). Bahas tentang cerita, karakter, atau visual nya.',
+  komik: 'Ini adalah manga/manhwa/komik. Bahas tentang art style, plot, atau karakter favorit.',
+  hentai: 'Ini adalah konten anime dewasa (18+). Buat caption yang menggoda tapi sopan, fokus ke art style yang bagus dan cerita yang menarik. JANGAN eksplisit.',
 };
 
 // Helper function to strip HTML tags
@@ -89,34 +98,43 @@ export async function generateCaption(options: GenerateCaptionOptions): Promise<
 
   // Clean description from HTML
   const cleanDescription = description ? stripHtml(description) : '';
+  
+  // Random seed untuk variasi
+  const randomSeed = Math.random().toString(36).substring(7);
+  const randomMood = ['excited', 'chill', 'hype', 'wholesome', 'amazed'][Math.floor(Math.random() * 5)];
 
-  const systemPrompt = `Kamu adalah social media manager untuk fanspage Facebook bertema anime.
-Tugasmu adalah membuat caption yang menarik untuk postingan gambar anime/manga.
+  const systemPrompt = `Kamu adalah social media manager untuk fanspage Facebook bertema anime bernama Weebnesia.
+Tugasmu adalah membuat caption yang UNIK dan MENARIK untuk postingan gambar anime/manga.
 
 ${stylePrompts[style]}
 
-ATURAN WAJIB DIIKUTI:
-1. Caption HARUS dalam Bahasa Indonesia (campur slang boleh)
-2. JANGAN copy paste deskripsi asli - buat dengan kata-kata sendiri
-3. JANGAN pakai bahasa Inggris kecuali slang Jaksel
-4. Maksimal 200 karakter untuk caption utama
-5. Jangan gunakan kata-kata kasar atau vulgar
-6. JANGAN tampilkan tag HTML apapun
-${category === 'hentai' ? '7. Untuk konten dewasa: fokus ke art style dan cerita, jangan eksplisit' : ''}`;
+ATURAN WAJIB:
+1. Caption HARUS dalam Bahasa Indonesia (campur slang Jaksel)
+2. JANGAN copy paste - buat dengan kata-kata sendiri yang UNIK
+3. JANGAN pakai bahasa Inggris formal
+4. Caption utama 100-150 karakter, lalu hashtag
+5. JANGAN pakai emoji yang bisa error/rusak (hindari emoji kompleks)
+6. Emoji yang AMAN: emot standar saja atau skip emoji
+7. JANGAN tampilkan tag HTML apapun
+8. WAJIB sebutkan judul "${title}" dalam caption
+9. Mood caption kali ini: ${randomMood}
+${category === 'hentai' ? '10. Untuk konten dewasa: fokus ke art style dan cerita, jangan eksplisit' : ''}`;
 
-  const userPrompt = `Buat caption ${style.toUpperCase()} untuk:
+  const userPrompt = `Buat caption JAKSEL yang UNIK untuk posting ini:
   
 Judul: ${title}
 Kategori: ${categoryContext[category]}
-${cleanDescription ? `Sinopsis: ${cleanDescription.substring(0, 200)}...` : ''}
+${cleanDescription ? `Info: ${cleanDescription.substring(0, 300)}` : 'Tidak ada deskripsi tambahan'}
 
-INGAT: Tulis dengan gaya ${style.toUpperCase()}, dalam BAHASA INDONESIA!
+Random seed: ${randomSeed} (gunakan ini untuk bikin variasi)
+Mood: ${randomMood}
 
-${includeHashtags ? `
-Hashtag: #Anime #Otaku #Wibu ${customHashtags.map(h => `#${h.replace('#', '')}`).join(' ')}
-` : ''}
+FORMAT OUTPUT:
+[Caption jaksel yang unik, sebutkan judul, relevan dengan konten]
 
-Langsung tulis caption saja:`;
+${customHashtags.length > 0 ? `#${customHashtags.join(' #')}` : '#Weebnesia #Anime #Wibu'}
+
+LANGSUNG tulis caption tanpa penjelasan:`;
 
   try {
     const completion = await groq.chat.completions.create({
@@ -125,23 +143,46 @@ Langsung tulis caption saja:`;
         { role: 'user', content: userPrompt },
       ],
       model: 'llama-3.3-70b-versatile',
-      temperature: 0.9,
-      max_tokens: 400,
+      temperature: 1.0, // Higher temperature untuk lebih variatif
+      max_tokens: 300,
+      top_p: 0.95,
     });
 
     let caption = completion.choices[0]?.message?.content || '';
-    // Extra cleanup - remove any remaining HTML
+    
+    // Extra cleanup
     caption = stripHtml(caption);
+    
+    // Remove broken emoji characters
+    caption = caption.replace(/[\uFFFD\u{1F300}-\u{1F9FF}]/gu, '').trim();
+    
+    // Ensure hashtags are included if not present
+    if (includeHashtags && !caption.includes('#')) {
+      const hashtags = customHashtags.length > 0 
+        ? `#${customHashtags.join(' #')}`
+        : '#Weebnesia #Anime #Wibu #AnimeIndonesia';
+      caption = `${caption}\n\n${hashtags}`;
+    }
+    
     return caption.trim();
   } catch (error) {
     console.error('Error generating caption with Groq:', error);
     
-    // Fallback caption
-    const fallbackHashtags = includeHashtags 
-      ? `\n\n#Anime #Otaku #Wibu ${customHashtags.map(h => `#${h.replace('#', '')}`).join(' ')}`
-      : '';
+    // Fallback captions yang variatif
+    const fallbackCaptions = [
+      `Woy bestie, ${title} ini literally bagus bgt dah! Gaskeun cek langsung`,
+      `Ngl guys ${title} bikin gue healing parah, vibes nya top tier fr fr`,
+      `Anjir ${title} ini lowkey underrated bgt sih, padahal ceritanya valid!`,
+      `Gila sih ${title} hits different bgt, gue suka parah sama kontennya`,
+      `No cap ${title} ini peak fiction buat gue, wajib cek dah bestie!`,
+    ];
     
-    return `✨ ${title} ✨\n\n${description || 'Cek konten keren ini!'} ${fallbackHashtags}`;
+    const randomFallback = fallbackCaptions[Math.floor(Math.random() * fallbackCaptions.length)];
+    const hashtags = customHashtags.length > 0 
+      ? `#${customHashtags.join(' #')}`
+      : '#Weebnesia #Anime #Wibu';
+    
+    return `${randomFallback}\n\n${hashtags}`;
   }
 }
 

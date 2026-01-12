@@ -77,8 +77,15 @@ async function performAutoPost() {
     console.log(`[Cron] Caption generated: ${caption.substring(0, 100)}...`);
   } catch (captionError: any) {
     console.error(`[Cron] Caption generation failed: ${captionError.message}`);
-    // Use fallback caption
-    caption = `🔥 ${imageResult.title}\n\nYuk check out which satu ini, literally keren banget sih!\n\n#Weebnesia #AnimeIndonesia #WibuNation`;
+    // Use fallback captions yang variatif
+    const fallbackCaptions = [
+      `Woy bestie, ${imageResult.title} ini literally bagus bgt dah! Gaskeun cek langsung\n\n#Weebnesia #AnimeIndonesia #WibuNation`,
+      `Ngl guys ${imageResult.title} bikin gue healing parah, vibes nya top tier fr fr\n\n#Weebnesia #AnimeIndonesia #WibuNation`,
+      `Anjir ${imageResult.title} ini lowkey underrated bgt sih, padahal ceritanya valid!\n\n#Weebnesia #AnimeIndonesia #WibuNation`,
+      `Gila sih ${imageResult.title} hits different bgt, gue suka parah sama kontennya\n\n#Weebnesia #AnimeIndonesia #WibuNation`,
+      `No cap ${imageResult.title} ini peak fiction buat gue, wajib cek dah bestie!\n\n#Weebnesia #AnimeIndonesia #WibuNation`,
+    ];
+    caption = fallbackCaptions[Math.floor(Math.random() * fallbackCaptions.length)];
     console.log(`[Cron] Using fallback caption`);
   }
 
