@@ -153,8 +153,8 @@ LANGSUNG tulis caption tanpa penjelasan:`;
     // Extra cleanup
     caption = stripHtml(caption);
     
-    // Remove broken emoji characters
-    caption = caption.replace(/[\uFFFD\u{1F300}-\u{1F9FF}]/gu, '').trim();
+    // Remove broken emoji characters (replacement character)
+    caption = caption.replace(/\uFFFD/g, '').trim();
     
     // Ensure hashtags are included if not present
     if (includeHashtags && !caption.includes('#')) {

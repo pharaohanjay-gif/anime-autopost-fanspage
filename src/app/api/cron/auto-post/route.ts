@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[Cron] Starting auto-post...');
+    console.log('[Cron] Starting auto-post v2...');
     console.log(`[Cron] Environment check - GROQ_API_KEY: ${process.env.GROQ_API_KEY ? 'SET' : 'NOT SET'}`);
     console.log(`[Cron] Environment check - FB_PAGE_ACCESS_TOKEN: ${process.env.FB_PAGE_ACCESS_TOKEN ? 'SET' : 'NOT SET'}`);
     
@@ -142,23 +142,18 @@ export async function GET(request: NextRequest) {
 // Test endpoint for specific category
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { category } = body;
+    const body = await request.json().catch(() => ({}));
+    const { category: requestedCategory } = body;
     
-    console.log(`[Test] Testing category: ${category}`);
-    
-    // Override category for testing
-    const originalGetCategory = getCategoryByHour;
-    getCategoryByHour = () => category || 'anime';
+    if (requestedCategory) {
+      console.log(`[Test] Testing category: ${requestedCategory}`);
+    }
     
     const result = await performAutoPost();
     
-    // Restore original function
-    getCategoryByHour = originalGetCategory;
-    
     return NextResponse.json({
       success: true,
-      message: 'Test post successful',
+      message: 'Auto-post successful',
       ...result,
       timestamp: new Date().toISOString(),
     });
