@@ -74,105 +74,54 @@ export async function postToWeebnesia(
     console.log('Image URL:', imageUrl);
     console.log('Caption length:', caption.length);
     
-    // Check if image is from a protected domain
-    const isProtectedDomain = imageUrl.includes('hanime') || 
-                               imageUrl.includes('htv-services') ||
-                               imageUrl.includes('hanime-cdn');
+    // Download image first (required for direct upload to /photos with published=true)
+    const imageBuffer = await downloadImage(imageUrl);
     
-    if (isProtectedDomain) {
-      console.log('Protected domain detected, downloading image first...');
-      
-      // Download image first
-      const imageBuffer = await downloadImage(imageUrl);
-      
-      if (!imageBuffer) {
-        console.error('Failed to download image from protected source');
-        return {
-          id: '',
-          success: false,
-          error: 'Failed to download image from protected source',
-        };
-      }
-      
-      console.log('Image downloaded, size:', imageBuffer.length, 'bytes');
-      
-      // Step 1: Upload photo first (unpublished) to get photo_id
-      const formData = new FormData();
-      formData.append('source', imageBuffer, {
-        filename: 'image.jpg',
-        contentType: 'image/jpeg',
-      });
-      formData.append('access_token', ACCESS_TOKEN);
-      formData.append('published', 'false'); // Upload dulu tanpa publish
-      
-      console.log('Uploading photo to Facebook...');
-      const photoResponse = await axios.post(
-        `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
-        formData,
-        {
-          headers: {
-            ...formData.getHeaders(),
-          },
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity,
-        }
-      );
-      
-      const photoId = photoResponse.data.id;
-      console.log('Photo uploaded, ID:', photoId);
-      
-      // Step 2: Create feed post with the photo attached
-      const feedResponse = await axios.post(
-        `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/feed`,
-        {
-          message: caption,
-          attached_media: [{ media_fbid: photoId }],
-          access_token: ACCESS_TOKEN,
-          published: true,
-        }
-      );
-      
-      console.log('Feed post created:', feedResponse.data);
-      
+    if (!imageBuffer) {
+      console.error('Failed to download image');
       return {
-        id: feedResponse.data.id,
-        post_id: feedResponse.data.id,
-        success: true,
+        id: '',
+        success: false,
+        error: 'Failed to download image',
       };
     }
     
-    // For non-protected URLs - same 2-step process
-    console.log('Using URL-based upload...');
+    console.log('Image downloaded, size:', imageBuffer.length, 'bytes');
     
-    // Step 1: Upload photo via URL (unpublished)
+    // Direct photo post dengan published=true dan no_story=false
+    // no_story=false ensures the post appears on timeline/feed
+    const formData = new FormData();
+    formData.append('source', imageBuffer, {
+      filename: 'image.jpg',
+      contentType: 'image/jpeg',
+    });
+    formData.append('message', caption);
+    formData.append('access_token', ACCESS_TOKEN);
+    formData.append('published', 'true');
+    formData.append('no_story', 'false'); // This makes it appear on feed/timeline
+    
+    console.log('Posting photo directly with no_story=false...');
     const photoResponse = await axios.post(
       `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
+      formData,
       {
-        url: imageUrl,
-        access_token: ACCESS_TOKEN,
-        published: false,
+        headers: {
+          ...formData.getHeaders(),
+        },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
       }
     );
     
+    console.log('Photo posted:', photoResponse.data);
+    
+    // Get the post_id from response
     const photoId = photoResponse.data.id;
-    console.log('Photo uploaded via URL, ID:', photoId);
-    
-    // Step 2: Create feed post with the photo attached
-    const feedResponse = await axios.post(
-      `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/feed`,
-      {
-        message: caption,
-        attached_media: [{ media_fbid: photoId }],
-        access_token: ACCESS_TOKEN,
-        published: true,
-      }
-    );
-    
-    console.log('Feed post created:', feedResponse.data);
+    const postId = photoResponse.data.post_id || photoId;
     
     return {
-      id: feedResponse.data.id,
-      post_id: feedResponse.data.id,
+      id: photoId,
+      post_id: postId,
       success: true,
     };
   } catch (error: any) {
@@ -191,7 +140,7 @@ export async function postToWeebnesia(
         };
       }
       
-      // Direct photo post with published=true
+      // Direct photo post with published=true and no_story=false
       const formData = new FormData();
       formData.append('source', imageBuffer, {
         filename: 'image.jpg',
@@ -200,6 +149,7 @@ export async function postToWeebnesia(
       formData.append('message', caption);
       formData.append('access_token', ACCESS_TOKEN);
       formData.append('published', 'true');
+      formData.append('no_story', 'false'); // Ensure it appears on timeline
       
       const fallbackResponse = await axios.post(
         `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
