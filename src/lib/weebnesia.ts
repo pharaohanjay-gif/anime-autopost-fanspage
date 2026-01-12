@@ -96,18 +96,17 @@ export async function postToWeebnesia(
       
       console.log('Image downloaded, size:', imageBuffer.length, 'bytes');
       
-      // Create form data with image buffer
+      // Step 1: Upload photo first (unpublished) to get photo_id
       const formData = new FormData();
       formData.append('source', imageBuffer, {
         filename: 'image.jpg',
         contentType: 'image/jpeg',
       });
-      formData.append('message', caption);
       formData.append('access_token', ACCESS_TOKEN);
-      formData.append('published', 'true'); // Pastikan posting publik
+      formData.append('published', 'false'); // Upload dulu tanpa publish
       
-      console.log('Uploading to Facebook...');
-      const response = await axios.post(
+      console.log('Uploading photo to Facebook...');
+      const photoResponse = await axios.post(
         `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
         formData,
         {
@@ -119,36 +118,66 @@ export async function postToWeebnesia(
         }
       );
       
-      console.log('Facebook API Response:', response.data);
+      const photoId = photoResponse.data.id;
+      console.log('Photo uploaded, ID:', photoId);
+      
+      // Step 2: Create feed post with the photo attached
+      const feedResponse = await axios.post(
+        `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/feed`,
+        {
+          message: caption,
+          attached_media: [{ media_fbid: photoId }],
+          access_token: ACCESS_TOKEN,
+          published: true,
+        }
+      );
+      
+      console.log('Feed post created:', feedResponse.data);
       
       return {
-        id: response.data.id,
-        post_id: response.data.post_id || response.data.id,
+        id: feedResponse.data.id,
+        post_id: feedResponse.data.id,
         success: true,
       };
     }
     
-    // For non-protected URLs, use direct URL posting
-    const response = await axios.post(
+    // For non-protected URLs - same 2-step process
+    console.log('Using URL-based upload...');
+    
+    // Step 1: Upload photo via URL (unpublished)
+    const photoResponse = await axios.post(
       `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
       {
         url: imageUrl,
-        message: caption,
         access_token: ACCESS_TOKEN,
-        published: true, // Pastikan posting publik
+        published: false,
       }
     );
     
-    console.log('Facebook API Response:', response.data);
+    const photoId = photoResponse.data.id;
+    console.log('Photo uploaded via URL, ID:', photoId);
+    
+    // Step 2: Create feed post with the photo attached
+    const feedResponse = await axios.post(
+      `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/feed`,
+      {
+        message: caption,
+        attached_media: [{ media_fbid: photoId }],
+        access_token: ACCESS_TOKEN,
+        published: true,
+      }
+    );
+    
+    console.log('Feed post created:', feedResponse.data);
     
     return {
-      id: response.data.id,
-      post_id: response.data.post_id || response.data.id,
+      id: feedResponse.data.id,
+      post_id: feedResponse.data.id,
       success: true,
     };
   } catch (error: any) {
-    // Try fallback method for all cases
-    console.log('Primary method failed, trying fallback download method...', error.message);
+    // Try simple direct photo post as fallback
+    console.log('2-step method failed, trying direct photo post...', error.message);
     
     try {
       const imageBuffer = await downloadImage(imageUrl);
@@ -162,9 +191,7 @@ export async function postToWeebnesia(
         };
       }
       
-      console.log('Image downloaded via fallback, size:', imageBuffer.length, 'bytes');
-      
-      // Create form data with image buffer
+      // Direct photo post with published=true
       const formData = new FormData();
       formData.append('source', imageBuffer, {
         filename: 'image.jpg',
@@ -172,7 +199,7 @@ export async function postToWeebnesia(
       });
       formData.append('message', caption);
       formData.append('access_token', ACCESS_TOKEN);
-      formData.append('published', 'true'); // Pastikan posting publik
+      formData.append('published', 'true');
       
       const fallbackResponse = await axios.post(
         `https://graph.facebook.com/${API_VERSION}/${PAGE_ID}/photos`,
@@ -186,7 +213,7 @@ export async function postToWeebnesia(
         }
       );
       
-      console.log('Fallback Facebook API Response:', fallbackResponse.data);
+      console.log('Fallback photo post response:', fallbackResponse.data);
       
       return {
         id: fallbackResponse.data.id,
@@ -195,7 +222,7 @@ export async function postToWeebnesia(
       };
     } catch (fallbackError: any) {
       const errorMessage = error.response?.data?.error?.message || error.message;
-      console.error('Both methods failed:', errorMessage);
+      console.error('All methods failed:', errorMessage);
       
       return {
         id: '',
