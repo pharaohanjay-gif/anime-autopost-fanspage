@@ -1,12 +1,12 @@
 import { TwitterApi } from 'twitter-api-v2';
 import axios from 'axios';
 
-// X (Twitter) API Configuration
+// X (Twitter) API Configuration - trim to remove any whitespace/newlines
 const X_CONFIG = {
-  API_KEY: process.env.X_API_KEY || '',
-  API_SECRET: process.env.X_API_SECRET || '',
-  ACCESS_TOKEN: process.env.X_ACCESS_TOKEN || '',
-  ACCESS_TOKEN_SECRET: process.env.X_ACCESS_TOKEN_SECRET || '',
+  API_KEY: (process.env.X_API_KEY || '').trim(),
+  API_SECRET: (process.env.X_API_SECRET || '').trim(),
+  ACCESS_TOKEN: (process.env.X_ACCESS_TOKEN || '').trim(),
+  ACCESS_TOKEN_SECRET: (process.env.X_ACCESS_TOKEN_SECRET || '').trim(),
 };
 
 interface XPostResponse {

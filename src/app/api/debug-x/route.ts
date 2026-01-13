@@ -6,10 +6,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const apiKey = process.env.X_API_KEY || '';
-    const apiSecret = process.env.X_API_SECRET || '';
-    const accessToken = process.env.X_ACCESS_TOKEN || '';
-    const accessSecret = process.env.X_ACCESS_TOKEN_SECRET || '';
+    // Trim credentials to remove any whitespace/newlines
+    const apiKey = (process.env.X_API_KEY || '').trim();
+    const apiSecret = (process.env.X_API_SECRET || '').trim();
+    const accessToken = (process.env.X_ACCESS_TOKEN || '').trim();
+    const accessSecret = (process.env.X_ACCESS_TOKEN_SECRET || '').trim();
 
     // Check credentials with full length info
     const credCheck = {
@@ -57,10 +58,10 @@ export async function GET() {
   } catch (error: any) {
     console.error('Debug error:', error);
     
-    const apiKey = process.env.X_API_KEY || '';
-    const apiSecret = process.env.X_API_SECRET || '';
-    const accessToken = process.env.X_ACCESS_TOKEN || '';
-    const accessSecret = process.env.X_ACCESS_TOKEN_SECRET || '';
+    const apiKey = (process.env.X_API_KEY || '').trim();
+    const apiSecret = (process.env.X_API_SECRET || '').trim();
+    const accessToken = (process.env.X_ACCESS_TOKEN || '').trim();
+    const accessSecret = (process.env.X_ACCESS_TOKEN_SECRET || '').trim();
     
     return NextResponse.json({
       success: false,
