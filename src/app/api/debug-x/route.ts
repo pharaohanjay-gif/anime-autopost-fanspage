@@ -27,7 +27,7 @@ export async function GET() {
 
     console.log('Credential check:', credCheck);
 
-    // Try to verify credentials using v1.1 API
+    // Create client
     const client = new TwitterApi({
       appKey: apiKey,
       appSecret: apiSecret,
@@ -35,17 +35,14 @@ export async function GET() {
       accessSecret: accessSecret,
     });
 
-    // Try v1.1 verifyCredentials (works with Free tier)
-    const me = await client.v1.verifyCredentials();
+    // Try to post a simple tweet using v2 API
+    const tweet = await client.v2.tweet('Test dari Weebnesia Bot! 🎌 #test');
     
     return NextResponse.json({
       success: true,
       credCheck,
-      user: {
-        id: me.id_str,
-        name: me.name,
-        screen_name: me.screen_name,
-      },
+      tweet: tweet.data,
+      tweetUrl: `https://x.com/cutyHUB1982/status/${tweet.data.id}`,
     });
   } catch (error: any) {
     console.error('Debug error:', error);
