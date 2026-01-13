@@ -46,8 +46,9 @@ export async function GET() {
       accessSecret: accessSecret,
     });
 
-    // Try to post a simple tweet
-    const tweet = await client.v2.tweet('Test dari Weebnesia Bot! 🎌 #anime');
+    // Try to post a simple tweet with unique timestamp
+    const timestamp = new Date().toISOString();
+    const tweet = await client.v2.tweet(`Test dari Weebnesia Bot! 🎌 ${timestamp} #anime`);
     
     return NextResponse.json({
       success: true,
