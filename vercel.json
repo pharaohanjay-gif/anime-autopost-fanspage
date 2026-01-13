@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/auto-post",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/x-hentai",
+      "schedule": "0 10 * * *"
     }
   ]
 }

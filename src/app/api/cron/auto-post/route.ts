@@ -2,18 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRandomImage } from '@/lib/api';
 import { generateCaption } from '@/lib/groq';
 import { postToWeebnesia } from '@/lib/weebnesia';
-import { postToX } from '@/lib/twitter';
 
-// Rhythm: hentai → anime → komik → repeat
-const POSTING_RHYTHM: ('hentai' | 'anime' | 'komik')[] = ['hentai', 'anime', 'komik'];
+// Rhythm untuk Facebook: anime → komik → repeat (tanpa hentai)
+const FB_POSTING_RHYTHM: ('anime' | 'komik')[] = ['anime', 'komik'];
 
 // Simple counter stored in edge config or we use hour-based rotation
-function getCategoryByHour(): 'hentai' | 'anime' | 'komik' {
+function getCategoryByHour(): 'anime' | 'komik' {
   // Use WIB timezone (UTC+7)
   const now = new Date();
   const wibHour = (now.getUTCHours() + 7) % 24;
   console.log(`[Cron] UTC hour: ${now.getUTCHours()}, WIB hour: ${wibHour}`);
-  return POSTING_RHYTHM[wibHour % 3];
+  return FB_POSTING_RHYTHM[wibHour % 2];
 }
 
 async function performAutoPost() {
@@ -27,7 +26,7 @@ async function performAutoPost() {
   // If no image from primary category, try others
   if (!imageResult) {
     console.log(`[Cron] No image from ${category}, trying fallback categories...`);
-    for (const fallbackCategory of POSTING_RHYTHM.filter(c => c !== category)) {
+    for (const fallbackCategory of FB_POSTING_RHYTHM.filter(c => c !== category)) {
       imageResult = await getRandomImage(fallbackCategory);
       if (imageResult) {
         category = fallbackCategory;
@@ -44,25 +43,6 @@ async function performAutoPost() {
   console.log(`[Cron] Image found: ${imageResult.title}`);
   console.log(`[Cron] Image URL: ${imageResult.url}`);
   console.log(`[Cron] Image source: ${imageResult.source}`);
-
-  // Special handling for hentai - directly fallback to anime for now
-  if (category === 'hentai') {
-    console.log(`[Cron] Hentai category detected, falling back to anime...`);
-    const animeImage = await getRandomImage('anime');
-    if (animeImage) {
-      imageResult = animeImage;
-      category = 'anime';
-      console.log(`[Cron] Fallback successful: ${animeImage.title}`);
-    } else {
-      console.log(`[Cron] Anime fallback failed, trying komik...`);
-      const komikImage = await getRandomImage('komik');
-      if (komikImage) {
-        imageResult = komikImage;
-        category = 'komik';
-        console.log(`[Cron] Komik fallback successful: ${komikImage.title}`);
-      }
-    }
-  }
 
   // Generate caption with Jaksel style
   let caption: string;
@@ -101,19 +81,9 @@ async function performAutoPost() {
     console.log(`[Cron] Facebook post successful! Post ID: ${fbResult.id}`);
   }
 
-  // Post to X (Twitter)
-  console.log(`[Cron] Attempting to post to X...`);
-  const xResult = await postToX(imageResult.url, caption);
-
-  if (!xResult.success) {
-    console.error(`[Cron] X post failed: ${xResult.error}`);
-  } else {
-    console.log(`[Cron] X post successful! Tweet ID: ${xResult.id}`);
-  }
-
-  // Check if both failed
-  if (!fbResult.success && !xResult.success) {
-    throw new Error(`Both platforms failed - FB: ${fbResult.error}, X: ${xResult.error}`);
+  // FB only - X uses separate endpoint /api/cron/x-hentai
+  if (!fbResult.success) {
+    throw new Error(`Facebook post failed: ${fbResult.error}`);
   }
 
   return {
@@ -123,12 +93,6 @@ async function performAutoPost() {
       success: fbResult.success,
       postId: fbResult.id,
       error: fbResult.error,
-    },
-    x: {
-      success: xResult.success,
-      tweetId: xResult.id,
-      tweetUrl: xResult.success ? `https://x.com/cutyHUB1982/status/${xResult.id}` : undefined,
-      error: xResult.error,
     },
     caption: caption.substring(0, 200),
   };
@@ -143,20 +107,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[Cron] Starting auto-post v2...');
+    console.log('[Cron] Starting auto-post (Facebook only)...');
     console.log(`[Cron] Environment check - GROQ_API_KEY: ${process.env.GROQ_API_KEY ? 'SET' : 'NOT SET'}`);
     console.log(`[Cron] Environment check - FB_PAGE_ACCESS_TOKEN: ${process.env.FB_PAGE_ACCESS_TOKEN ? 'SET' : 'NOT SET'}`);
-    console.log(`[Cron] Environment check - X_API_KEY: ${process.env.X_API_KEY ? 'SET' : 'NOT SET'}`);
     
     const result = await performAutoPost();
 
     console.log(`[Cron] Posted successfully!`);
     console.log(`[Cron] Facebook: ${result.facebook.success ? 'OK' : 'FAILED'}`);
-    console.log(`[Cron] X: ${result.x.success ? 'OK' : 'FAILED'}`);
     
     return NextResponse.json({
       success: true,
-      message: 'Auto-post successful',
+      message: 'Auto-post to Facebook successful',
       ...result,
       timestamp: new Date().toISOString(),
     });
