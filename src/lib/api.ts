@@ -266,39 +266,52 @@ export async function searchKomik(query: string): Promise<KomikItem[]> {
 const HANIME_SEARCH_API = 'https://search.htv-services.com';
 
 async function fetchHentaiDirect(): Promise<HentaiItem[]> {
-  const response = await axios.post(HANIME_SEARCH_API, {
-    blacklist: [],
-    brands: [],
-    order_by: 'created_at_unix',
-    page: 0,
-    tags: [],
-    search_text: '',
-    tags_mode: 'AND',
-  }, {
-    headers: { 'Content-Type': 'application/json' },
-    timeout: 15000,
-  });
+  try {
+    const response = await axios.post(HANIME_SEARCH_API, {
+      blacklist: [],
+      brands: [],
+      order_by: 'created_at_unix',
+      page: 0,
+      tags: [],
+      search_text: '',
+      tags_mode: 'AND',
+    }, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 15000,
+    });
 
-  const hits = JSON.parse(response.data?.hits || '[]');
+    // Parse hits - could be string or object
+    let hits: any[] = [];
+    if (typeof response.data?.hits === 'string') {
+      hits = JSON.parse(response.data.hits);
+    } else if (Array.isArray(response.data?.hits)) {
+      hits = response.data.hits;
+    }
 
-  return hits.slice(0, 20).map((item: any) => ({
-    id: item.id,
-    name: item.name,
-    titles: item.titles || [],
-    slug: item.slug,
-    description: item.description || '',
-    views: item.views,
-    bannerImage: item.poster_url,
-    coverImage: item.cover_url,
-    cover_url: item.cover_url,
-    poster_url: item.poster_url,
-    brand: {
-      name: item.brand,
-      id: item.brand_id,
-    },
-    tags: item.tags || [],
-    rating: item.rating,
-  }));
+    console.log(`[Hentai API] Fetched ${hits.length} items`);
+
+    return hits.slice(0, 20).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      titles: item.titles || [],
+      slug: item.slug,
+      description: item.description || '',
+      views: item.views,
+      bannerImage: item.poster_url,
+      coverImage: item.cover_url,
+      cover_url: item.cover_url,
+      poster_url: item.poster_url,
+      brand: {
+        name: item.brand,
+        id: item.brand_id,
+      },
+      tags: item.tags || [],
+      rating: item.rating,
+    }));
+  } catch (error: any) {
+    console.error('[Hentai API] Error fetching:', error.message);
+    return [];
+  }
 }
 
 export async function fetchRecentHentai(): Promise<HentaiItem[]> {
