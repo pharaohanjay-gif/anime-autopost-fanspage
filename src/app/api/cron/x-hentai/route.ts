@@ -84,7 +84,7 @@ TULIS CAPTION SEKARANG (2-3 kalimat natural, max 220 karakter):`;
     
     // Add CTA dan hashtags
     const cta = `\n\nNonton lengkap: memenesia.web.id 🔥`;
-    const hashtags = '\n#Hentai #NSFW #Anime18';
+    const hashtags = '\n#Anime #Japan #Waifu';
     
     // Ensure max 280 chars for Twitter
     const maxCaptionLength = 280 - cta.length - hashtags.length;
@@ -97,9 +97,9 @@ TULIS CAPTION SEKARANG (2-3 kalimat natural, max 220 karakter):`;
     console.error('Error generating hentai caption:', error);
     // Fallback captions yang bervariasi dan natural
     const fallbacks = [
-      `Gue baru nonton ${title} dan gila sih ini bagus bgt. Waifunya cakep2, ceritanya juga ada twistnya. Recommend bgt dah\n\nNonton lengkap: memenesia.web.id 🔥\n#Hentai #NSFW #Anime18`,
-      `Anjir ${title} ini underrated parah padahal art stylenya top tier. Karakternya juga likeable semua. Worth it sih\n\nNonton lengkap: memenesia.web.id 🔥\n#Hentai #NSFW #Anime18`,
-      `Ngl gue kecanduan sama ${title}, udah nonton berkali2 dan masih suka aja. Scene favorit gue yang di tengah2, bikin deg2an\n\nNonton lengkap: memenesia.web.id 🔥\n#Hentai #NSFW #Anime18`,
+      `Gue baru nonton ${title} dan gila sih ini bagus bgt. Waifunya cakep2, ceritanya juga ada twistnya. Recommend bgt dah\n\nNonton lengkap: memenesia.web.id 🔥\n#Anime #Japan #Waifu`,
+      `Anjir ${title} ini underrated parah padahal art stylenya top tier. Karakternya juga likeable semua. Worth it sih\n\nNonton lengkap: memenesia.web.id 🔥\n#Anime #Japan #Waifu`,
+      `Ngl gue kecanduan sama ${title}, udah nonton berkali2 dan masih suka aja. Scene favorit gue yang di tengah2, bikin deg2an\n\nNonton lengkap: memenesia.web.id 🔥\n#Anime #Japan #Waifu`,
     ];
     return fallbacks[Math.floor(Math.random() * fallbacks.length)];
   }

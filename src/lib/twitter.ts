@@ -92,7 +92,7 @@ export async function postToX(
         
         console.log('Media uploaded successfully, ID:', mediaId);
         
-        // Post tweet with media
+        // Post tweet with media - mark as NOT sensitive
         const tweet = await client.v2.tweet({
           text: tweetText,
           media: {

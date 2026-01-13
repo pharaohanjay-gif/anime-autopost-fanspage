@@ -150,7 +150,7 @@ TULIS CAPTION (2-3 kalimat, max 200 karakter):`;
     caption = caption.replace(/^["']|["']$/g, '').replace(/\n+/g, ' ').trim();
     
     const cta = `\n\nNonton lengkap: memenesia.web.id 🔥`;
-    const hashtags = '\n#Hentai #NSFW #Anime18';
+    const hashtags = '\n#Anime #Japan #Waifu';
     
     const maxLen = 280 - cta.length - hashtags.length;
     if (caption.length > maxLen) {
@@ -160,7 +160,7 @@ TULIS CAPTION (2-3 kalimat, max 200 karakter):`;
     return caption + cta + hashtags;
   } catch (error: any) {
     console.error('[X Caption] Error:', error.message);
-    return `Gue baru nonton ${title} dan gila sih bagus bgt. Ceritanya ada plot twist, art nya juga top tier. Recommend!\n\nNonton lengkap: memenesia.web.id 🔥\n#Hentai #NSFW #Anime18`;
+    return `Gue baru nonton ${title} dan gila sih bagus bgt. Ceritanya ada plot twist, art nya juga top tier. Recommend!\n\nNonton lengkap: memenesia.web.id 🔥\n#Anime #Japan #Waifu`;
   }
 }
 
