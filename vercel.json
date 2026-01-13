@@ -1,12 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/auto-post",
+      "path": "/api/cron/combined",
       "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/cron/x-hentai",
-      "schedule": "0 10 * * *"
     }
   ]
 }
