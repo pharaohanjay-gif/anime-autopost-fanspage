@@ -11,23 +11,33 @@ export async function GET() {
     const accessToken = process.env.X_ACCESS_TOKEN || '';
     const accessSecret = process.env.X_ACCESS_TOKEN_SECRET || '';
 
-    // Check if credentials exist
+    // Check credentials with full length info
     const credCheck = {
-      hasApiKey: apiKey.length > 0,
-      apiKeyLength: apiKey.length,
-      apiKeyHint: apiKey.substring(0, 5) + '...',
-      hasApiSecret: apiSecret.length > 0,
-      apiSecretLength: apiSecret.length,
-      hasAccessToken: accessToken.length > 0,
-      accessTokenLength: accessToken.length,
-      accessTokenHint: accessToken.substring(0, 10) + '...',
-      hasAccessSecret: accessSecret.length > 0,
-      accessSecretLength: accessSecret.length,
+      apiKey: {
+        length: apiKey.length,
+        first5: apiKey.substring(0, 5),
+        last3: apiKey.substring(apiKey.length - 3),
+      },
+      apiSecret: {
+        length: apiSecret.length,
+        first5: apiSecret.substring(0, 5),
+        last3: apiSecret.substring(apiSecret.length - 3),
+      },
+      accessToken: {
+        length: accessToken.length,
+        first10: accessToken.substring(0, 10),
+        last3: accessToken.substring(accessToken.length - 3),
+      },
+      accessSecret: {
+        length: accessSecret.length,
+        first5: accessSecret.substring(0, 5),
+        last3: accessSecret.substring(accessSecret.length - 3),
+      },
     };
 
-    console.log('Credential check:', credCheck);
+    console.log('Credential check:', JSON.stringify(credCheck, null, 2));
 
-    // Create client with explicit readWrite access
+    // Create client
     const client = new TwitterApi({
       appKey: apiKey,
       appSecret: apiSecret,
@@ -35,11 +45,8 @@ export async function GET() {
       accessSecret: accessSecret,
     });
 
-    // Get readWrite client
-    const rwClient = client.readWrite;
-
-    // Try to post a simple tweet using v2 API
-    const tweet = await rwClient.v2.tweet('Test dari Weebnesia Bot! 🎌 #anime');
+    // Try to post a simple tweet
+    const tweet = await client.v2.tweet('Test dari Weebnesia Bot! 🎌 #anime');
     
     return NextResponse.json({
       success: true,
@@ -49,25 +56,24 @@ export async function GET() {
     });
   } catch (error: any) {
     console.error('Debug error:', error);
-    console.error('Full error:', JSON.stringify(error, null, 2));
     
-    // Get more details about the error
-    let errorDetails = {
-      message: error.message,
-      code: error.code,
-      data: error.data,
-      rateLimit: error.rateLimit,
-      errors: error.errors,
-    };
-
+    const apiKey = process.env.X_API_KEY || '';
+    const apiSecret = process.env.X_API_SECRET || '';
+    const accessToken = process.env.X_ACCESS_TOKEN || '';
+    const accessSecret = process.env.X_ACCESS_TOKEN_SECRET || '';
+    
     return NextResponse.json({
       success: false,
-      error: errorDetails,
+      error: {
+        message: error.message,
+        code: error.code,
+        data: error.data,
+      },
       credCheck: {
-        hasApiKey: (process.env.X_API_KEY || '').length > 0,
-        apiKeyHint: (process.env.X_API_KEY || '').substring(0, 5) + '...',
-        hasAccessToken: (process.env.X_ACCESS_TOKEN || '').length > 0,
-        accessTokenHint: (process.env.X_ACCESS_TOKEN || '').substring(0, 10) + '...',
+        apiKey: { length: apiKey.length, hint: apiKey.substring(0, 5) + '...' + apiKey.substring(apiKey.length - 3) },
+        apiSecret: { length: apiSecret.length },
+        accessToken: { length: accessToken.length, hint: accessToken.substring(0, 10) + '...' + accessToken.substring(accessToken.length - 3) },
+        accessSecret: { length: accessSecret.length },
       },
     }, { status: 500 });
   }
