@@ -30,17 +30,32 @@ async function downloadImage(imageUrl: string): Promise<Buffer | null> {
   try {
     console.log('Downloading image for X post:', imageUrl);
     
+    // Try multiple user agents and referers
+    const headers: Record<string, string> = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': 'https://hanime.tv/',
+    };
+    
     const response = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
+      headers,
       timeout: 30000,
+      maxRedirects: 5,
     });
+    
+    console.log('Image downloaded, size:', response.data.byteLength, 'bytes');
+    
+    if (response.data.byteLength < 1000) {
+      console.error('Image too small, likely blocked or error');
+      return null;
+    }
     
     return Buffer.from(response.data);
   } catch (error: any) {
     console.error('Error downloading image:', error.message);
+    console.error('Image URL was:', imageUrl);
     return null;
   }
 }
@@ -66,29 +81,47 @@ export async function postToX(
     const imageBuffer = await downloadImage(imageUrl);
     
     if (imageBuffer) {
-      console.log('Image downloaded, uploading to X...');
+      console.log('Image downloaded successfully, size:', imageBuffer.length, 'bytes');
+      console.log('Uploading to X media endpoint...');
       
-      // Upload media first
-      const mediaId = await client.v1.uploadMedia(imageBuffer, {
-        mimeType: 'image/jpeg',
-      });
-      
-      console.log('Media uploaded, ID:', mediaId);
-      
-      // Post tweet with media
-      const tweet = await client.v2.tweet({
-        text: tweetText,
-        media: {
-          media_ids: [mediaId],
-        },
-      });
-      
-      console.log('Tweet posted successfully:', tweet.data.id);
-      
-      return {
-        id: tweet.data.id,
-        success: true,
-      };
+      try {
+        // Upload media first using v1.1 API
+        const mediaId = await client.v1.uploadMedia(imageBuffer, {
+          mimeType: 'image/jpeg',
+        });
+        
+        console.log('Media uploaded successfully, ID:', mediaId);
+        
+        // Post tweet with media
+        const tweet = await client.v2.tweet({
+          text: tweetText,
+          media: {
+            media_ids: [mediaId],
+          },
+        });
+        
+        console.log('Tweet posted successfully with image:', tweet.data.id);
+        
+        return {
+          id: tweet.data.id,
+          success: true,
+        };
+      } catch (uploadError: any) {
+        console.error('Media upload failed:', uploadError.message);
+        console.error('Upload error details:', JSON.stringify(uploadError.data || uploadError, null, 2));
+        
+        // Fallback to text-only if media upload fails
+        console.log('Falling back to text-only tweet...');
+        const tweet = await client.v2.tweet({
+          text: tweetText,
+        });
+        
+        return {
+          id: tweet.data.id,
+          success: true,
+          error: 'Posted without image: ' + uploadError.message,
+        };
+      }
     } else {
       // Post text-only tweet if image download failed
       console.log('Image download failed, posting text-only tweet...');

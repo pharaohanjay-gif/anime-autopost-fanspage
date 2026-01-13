@@ -76,16 +76,12 @@ async function performAutoPost() {
 
   if (!fbResult.success) {
     console.error(`[Cron] Facebook post failed: ${fbResult.error}`);
-    // Continue to X even if FB fails
+    // Don't throw - return success with FB error noted
   } else {
     console.log(`[Cron] Facebook post successful! Post ID: ${fbResult.id}`);
   }
 
-  // FB only - X uses separate endpoint /api/cron/x-hentai
-  if (!fbResult.success) {
-    throw new Error(`Facebook post failed: ${fbResult.error}`);
-  }
-
+  // Return result regardless of FB success/fail (don't throw 500 for FB token issues)
   return {
     category,
     title: imageResult.title,
