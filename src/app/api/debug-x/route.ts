@@ -24,7 +24,7 @@ export async function GET() {
 
     console.log('Credential check:', credCheck);
 
-    // Try to verify credentials
+    // Try to verify credentials using v1.1 API
     const client = new TwitterApi({
       appKey: apiKey,
       appSecret: apiSecret,
@@ -32,13 +32,17 @@ export async function GET() {
       accessSecret: accessSecret,
     });
 
-    // Try to get current user
-    const me = await client.v2.me();
+    // Try v1.1 verifyCredentials (works with Free tier)
+    const me = await client.v1.verifyCredentials();
     
     return NextResponse.json({
       success: true,
       credCheck,
-      user: me.data,
+      user: {
+        id: me.id_str,
+        name: me.name,
+        screen_name: me.screen_name,
+      },
     });
   } catch (error: any) {
     console.error('Debug error:', error);
@@ -48,6 +52,7 @@ export async function GET() {
       message: error.message,
       code: error.code,
       data: error.data,
+      rateLimit: error.rateLimit,
     };
 
     return NextResponse.json({
