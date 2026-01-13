@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRandomImage } from '@/lib/api';
 import { generateCaption } from '@/lib/groq';
 import { postToWeebnesia } from '@/lib/weebnesia';
+import { postToX } from '@/lib/twitter';
 
 // Rhythm: hentai → anime → komik → repeat
 const POSTING_RHYTHM: ('hentai' | 'anime' | 'komik')[] = ['hentai', 'anime', 'komik'];
@@ -91,17 +92,44 @@ async function performAutoPost() {
 
   // Post to Facebook
   console.log(`[Cron] Attempting to post to Facebook...`);
-  const result = await postToWeebnesia(imageResult.url, caption);
+  const fbResult = await postToWeebnesia(imageResult.url, caption);
 
-  if (!result.success) {
-    console.error(`[Cron] Facebook post failed: ${result.error}`);
-    throw new Error(result.error || 'Failed to post to Facebook');
+  if (!fbResult.success) {
+    console.error(`[Cron] Facebook post failed: ${fbResult.error}`);
+    // Continue to X even if FB fails
+  } else {
+    console.log(`[Cron] Facebook post successful! Post ID: ${fbResult.id}`);
+  }
+
+  // Post to X (Twitter)
+  console.log(`[Cron] Attempting to post to X...`);
+  const xResult = await postToX(imageResult.url, caption);
+
+  if (!xResult.success) {
+    console.error(`[Cron] X post failed: ${xResult.error}`);
+  } else {
+    console.log(`[Cron] X post successful! Tweet ID: ${xResult.id}`);
+  }
+
+  // Check if both failed
+  if (!fbResult.success && !xResult.success) {
+    throw new Error(`Both platforms failed - FB: ${fbResult.error}, X: ${xResult.error}`);
   }
 
   return {
     category,
     title: imageResult.title,
-    postId: result.id,
+    facebook: {
+      success: fbResult.success,
+      postId: fbResult.id,
+      error: fbResult.error,
+    },
+    x: {
+      success: xResult.success,
+      tweetId: xResult.id,
+      tweetUrl: xResult.success ? `https://x.com/cutyHUB1982/status/${xResult.id}` : undefined,
+      error: xResult.error,
+    },
     caption: caption.substring(0, 200),
   };
 }
@@ -118,10 +146,14 @@ export async function GET(request: NextRequest) {
     console.log('[Cron] Starting auto-post v2...');
     console.log(`[Cron] Environment check - GROQ_API_KEY: ${process.env.GROQ_API_KEY ? 'SET' : 'NOT SET'}`);
     console.log(`[Cron] Environment check - FB_PAGE_ACCESS_TOKEN: ${process.env.FB_PAGE_ACCESS_TOKEN ? 'SET' : 'NOT SET'}`);
+    console.log(`[Cron] Environment check - X_API_KEY: ${process.env.X_API_KEY ? 'SET' : 'NOT SET'}`);
     
     const result = await performAutoPost();
 
-    console.log(`[Cron] Posted successfully! Post ID: ${result.postId}`);
+    console.log(`[Cron] Posted successfully!`);
+    console.log(`[Cron] Facebook: ${result.facebook.success ? 'OK' : 'FAILED'}`);
+    console.log(`[Cron] X: ${result.x.success ? 'OK' : 'FAILED'}`);
+    
     return NextResponse.json({
       success: true,
       message: 'Auto-post successful',
