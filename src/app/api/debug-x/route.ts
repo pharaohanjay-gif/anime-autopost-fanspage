@@ -27,7 +27,7 @@ export async function GET() {
 
     console.log('Credential check:', credCheck);
 
-    // Create client
+    // Create client with explicit readWrite access
     const client = new TwitterApi({
       appKey: apiKey,
       appSecret: apiSecret,
@@ -35,8 +35,11 @@ export async function GET() {
       accessSecret: accessSecret,
     });
 
+    // Get readWrite client
+    const rwClient = client.readWrite;
+
     // Try to post a simple tweet using v2 API
-    const tweet = await client.v2.tweet('Test dari Weebnesia Bot! 🎌 #test');
+    const tweet = await rwClient.v2.tweet('Test dari Weebnesia Bot! 🎌 #anime');
     
     return NextResponse.json({
       success: true,
@@ -46,6 +49,7 @@ export async function GET() {
     });
   } catch (error: any) {
     console.error('Debug error:', error);
+    console.error('Full error:', JSON.stringify(error, null, 2));
     
     // Get more details about the error
     let errorDetails = {
@@ -53,6 +57,7 @@ export async function GET() {
       code: error.code,
       data: error.data,
       rateLimit: error.rateLimit,
+      errors: error.errors,
     };
 
     return NextResponse.json({
