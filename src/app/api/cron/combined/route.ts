@@ -116,41 +116,50 @@ async function generateXHentaiCaption(
   try {
     const tagList = tags.slice(0, 5).join(', ');
     
-    const prompt = `Kamu adalah manusia biasa yang suka hentai dan aktif di Twitter. Tulis caption untuk share hentai favorit.
+    const prompt = `Kamu reviewer anime dewasa di Twitter. Tulis review/caption PANJANG dan DESKRIPTIF untuk konten berikut:
 
-KONTEN:
+DETAIL KONTEN:
 - Judul: ${title}
-- Studio: ${brand}
-- Tags: ${tagList}
-- Sinopsis: ${description.substring(0, 300)}
+- Studio/Brand: ${brand}
+- Genre/Tags: ${tagList}
+- Sinopsis: ${description.substring(0, 500)}
 
-ATURAN:
-1. Bahasa Indonesia GAUL (literally, vibes, fr, ngl, parah, anjir, gila, bgt, gaskeun, gue)
-2. HARUS sebut judul "${title}" dalam kalimat
-3. Tulis 2-3 kalimat yang natural kayak orang curhat
-4. Sedikit menggoda tapi ga vulgar
-5. Ajak nonton dengan cara santai
+INSTRUKSI PENULISAN:
+1. Bahasa Indonesia gaul tapi tetap informatif (gue, lu, bgt, sih, anjir, literally, vibes)
+2. WAJIB sebut judul "${title}" 
+3. Tulis 4-5 kalimat PANJANG yang menjelaskan:
+   - Cerita/plot singkat
+   - Karakter utama atau waifu favorit
+   - Art style atau animasinya
+   - Kenapa worth it ditonton
+4. JANGAN tulis "nonton di..." atau "cek di..." atau promosi apapun
+5. Tulis seperti orang yang genuinely excited sharing review
+6. Akhiri dengan ajakan diskusi (contoh: "ada yang udah nonton?", "menurut kalian gimana?")
 
-TULIS CAPTION (2-3 kalimat, max 200 karakter):`;
+CONTOH GAYA PENULISAN:
+"Baru kelar marathon ${title} dan literally ga nyesel. Plotnya unexpectedly deep, ada romance sama drama yang bikin invested. Karakter cewenya juga well-written, bukan cuma fanservice doang. Art stylenya smooth banget, studio ${brand} emang ga pernah ngecewain. Yang belum nonton rugi sih fr fr. Ada yang udah nonton juga?"
+
+TULIS REVIEW (4-5 kalimat, 200-250 karakter):`;
 
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         {
           role: 'system',
-          content: 'Kamu orang Indonesia yang hobi nonton hentai. Tulis seperti manusia yang excited share tontonan favorit.',
+          content: 'Kamu reviewer anime dewasa Indonesia. Tulis review panjang dan deskriptif, BUKAN promosi. Fokus bahas konten, cerita, karakter, dan art style.',
         },
         { role: 'user', content: prompt },
       ],
-      max_tokens: 180,
-      temperature: 0.95,
+      max_tokens: 280,
+      temperature: 0.9,
     });
 
     let caption = response.choices[0]?.message?.content?.trim() || '';
     caption = caption.replace(/^["']|["']$/g, '').replace(/\n+/g, ' ').trim();
     
-    const cta = `\n\nNonton lengkap: memenesia.web.id 🔥`;
-    const hashtags = '\n#Anime #Japan #Waifu';
+    // CTA yang lebih subtle - di akhir sebagai "sumber" bukan ajakan
+    const cta = `\n\nmemenesia.web.id`;
+    const hashtags = '\n#Anime #Waifu #AnimeReview';
     
     const maxLen = 280 - cta.length - hashtags.length;
     if (caption.length > maxLen) {
@@ -160,7 +169,7 @@ TULIS CAPTION (2-3 kalimat, max 200 karakter):`;
     return caption + cta + hashtags;
   } catch (error: any) {
     console.error('[X Caption] Error:', error.message);
-    return `Gue baru nonton ${title} dan gila sih bagus bgt. Ceritanya ada plot twist, art nya juga top tier. Recommend!\n\nNonton lengkap: memenesia.web.id 🔥\n#Anime #Japan #Waifu`;
+    return `Baru kelar nonton ${title} dan gue harus bilang ini worth it banget. Art stylenya clean, karakternya likeable, ceritanya juga ada plot twist yang ga ketebak. Studio ${brand} emang selalu deliver quality. Ada yang udah nonton juga?\n\nmemenesia.web.id\n#Anime #Waifu #AnimeReview`;
   }
 }
 
