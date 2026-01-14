@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchRecentHentai, HentaiItem } from '@/lib/api';
 import { postToX } from '@/lib/twitter';
 import Groq from 'groq-sdk';
 import crypto from 'crypto';
@@ -7,6 +6,26 @@ import axios from 'axios';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
+
+// Local interface for hentai items
+interface HentaiItem {
+  id: number;
+  name: string;
+  titles?: string[];
+  slug?: string;
+  description: string;
+  views?: number;
+  bannerImage?: string;
+  coverImage?: string;
+  cover_url?: string;
+  poster_url?: string;
+  brand?: {
+    name: string;
+    id?: number;
+  };
+  tags?: string[];
+  rating?: number;
+}
 
 const groq = new Groq({
   apiKey: (process.env.GROQ_API_KEY || '').trim(),
