@@ -124,19 +124,20 @@ TULIS REVIEW (4-5 kalimat, 200-250 karakter):`;
     let caption = response.choices[0]?.message?.content?.trim() || '';
     caption = caption.replace(/^["']|["']$/g, '').replace(/\n+/g, ' ').trim();
     
-    // REMOVED URL - Twitter blocks memenesia.web.id
-    const hashtags = '\n\n#Anime #Waifu #Hentai #WeebnesiaBOT';
+    // Pakai bit.ly link (memenesia.web.id di-block Twitter)
+    const cta = '\n\nNonton: https://bit.ly/videoanimegratis';
+    const hashtags = '\n#Anime #Waifu #Hentai';
     
-    const maxLen = 280 - hashtags.length;
+    const maxLen = 280 - cta.length - hashtags.length;
     if (caption.length > maxLen) {
       caption = caption.substring(0, maxLen - 3) + '...';
     }
     
-    return caption + hashtags;
+    return caption + cta + hashtags;
   } catch (error: any) {
     console.error('[Twitter] Caption generation error:', error.message);
     // Fallback caption
-    return `Baru kelar nonton ${title} dan gue harus bilang ini worth it banget. Art stylenya clean, karakternya likeable, ceritanya juga ada plot twist yang ga ketebak. Ada yang udah nonton juga?\n\n#Anime #Waifu #Hentai #WeebnesiaBOT`;
+    return `Baru kelar nonton ${title} dan gue harus bilang ini worth it banget. Art stylenya clean, karakternya likeable, ceritanya juga ada plot twist yang ga ketebak. Ada yang udah nonton juga?\n\nNonton: https://bit.ly/videoanimegratis\n#Anime #Waifu #Hentai`;
   }
 }
 
@@ -267,14 +268,13 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
       }, { status: 200 });
     } else {
-      // Return 200 even on failure to prevent cron-job from marking as failed
-      // The actual error is in the response body
+      // Return 500 agar cron-job.org menandai sebagai FAILED
       return NextResponse.json({
         success: false,
-        message: 'Twitter post failed',
+        message: 'FAILED - Twitter post failed',
         result,
         timestamp: new Date().toISOString(),
-      }, { status: 200 }); // Changed from 500 to 200
+      }, { status: 500 }); // Return 500 for honest monitoring
     }
   } catch (error: any) {
     console.error('[Twitter Cron] Fatal error:', error.message);
@@ -282,6 +282,6 @@ export async function GET(request: NextRequest) {
       success: false,
       error: error.message,
       timestamp: new Date().toISOString(),
-    }, { status: 200 }); // Changed from 500 to 200
+    }, { status: 500 }); // Return 500 for errors
   }
 }

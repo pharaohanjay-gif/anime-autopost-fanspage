@@ -157,19 +157,19 @@ TULIS REVIEW (4-5 kalimat, 200-250 karakter):`;
     let caption = response.choices[0]?.message?.content?.trim() || '';
     caption = caption.replace(/^["']|["']$/g, '').replace(/\n+/g, ' ').trim();
     
-    // REMOVED URL - Twitter blocks memenesia.web.id
-    // Using hashtags only for engagement
-    const hashtags = '\n\n#Anime #Waifu #Hentai #WeebnesiaBOT';
+    // Pakai bit.ly link (memenesia.web.id di-block Twitter)
+    const cta = '\n\nNonton: https://bit.ly/videoanimegratis';
+    const hashtags = '\n#Anime #Waifu #Hentai';
     
-    const maxLen = 280 - hashtags.length;
+    const maxLen = 280 - cta.length - hashtags.length;
     if (caption.length > maxLen) {
       caption = caption.substring(0, maxLen - 3) + '...';
     }
     
-    return caption + hashtags;
+    return caption + cta + hashtags;
   } catch (error: any) {
     console.error('[X Caption] Error:', error.message);
-    return `Baru kelar nonton ${title} dan gue harus bilang ini worth it banget. Art stylenya clean, karakternya likeable, ceritanya juga ada plot twist yang ga ketebak. Studio ${brand} emang selalu deliver quality. Ada yang udah nonton juga?\n\n#Anime #Waifu #Hentai #WeebnesiaBOT`;
+    return `Baru kelar nonton ${title} dan gue harus bilang ini worth it banget. Art stylenya clean, karakternya likeable, ceritanya juga ada plot twist yang ga ketebak. Studio ${brand} emang selalu deliver quality. Ada yang udah nonton juga?\n\nNonton: https://bit.ly/videoanimegratis\n#Anime #Waifu #Hentai`;
   }
 }
 
@@ -294,24 +294,40 @@ export async function GET(request: NextRequest) {
     
     const results = await performCombinedAutoPost();
     
-    const anySuccess = results.facebook.success || results.twitter.success;
+    // Untuk monitoring yang JUJUR:
+    // - Jika KEDUA platform gagal = return 500 (Failed)
+    // - Jika minimal 1 berhasil = return 200 (Success)
+    // - Jika Twitter gagal tapi FB berhasil = return 200
+    // - Jika Twitter berhasil tapi FB gagal = return 200
+    const twitterSuccess = results.twitter.success;
+    const facebookSuccess = results.facebook.success;
+    const anySuccess = twitterSuccess || facebookSuccess;
     
-    console.log(`[Combined] Results - FB: ${results.facebook.success ? 'OK' : 'FAILED'}, X: ${results.twitter.success ? 'OK' : 'FAILED'}`);
+    console.log(`[Combined] Results - FB: ${facebookSuccess ? 'OK' : 'FAILED'}, X: ${twitterSuccess ? 'OK' : 'FAILED'}`);
     
-    // Always return 200 to prevent cron-job from marking as failed
-    // Actual success/failure is in the response body
-    return NextResponse.json({
-      success: anySuccess,
-      message: anySuccess ? 'Auto-post completed' : 'Both platforms failed (check error details)',
-      results,
-      timestamp: new Date().toISOString(),
-    }, { status: 200 }); // Always 200
+    // Return proper status code untuk monitoring yang jujur
+    if (anySuccess) {
+      return NextResponse.json({
+        success: true,
+        message: `Posted successfully! FB: ${facebookSuccess ? 'OK' : 'FAILED'}, Twitter: ${twitterSuccess ? 'OK' : 'FAILED'}`,
+        results,
+        timestamp: new Date().toISOString(),
+      }, { status: 200 });
+    } else {
+      // KEDUA platform gagal = return 500 agar cron-job.org marking as FAILED
+      return NextResponse.json({
+        success: false,
+        message: 'FAILED - Both platforms failed to post',
+        results,
+        timestamp: new Date().toISOString(),
+      }, { status: 500 });
+    }
   } catch (error: any) {
     console.error('[Combined] Fatal error:', error.message);
     return NextResponse.json({
       success: false,
       error: error.message,
       timestamp: new Date().toISOString(),
-    }, { status: 200 }); // Always 200
+    }, { status: 500 }); // Return 500 for errors
   }
 }
