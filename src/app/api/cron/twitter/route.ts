@@ -124,20 +124,19 @@ TULIS REVIEW (4-5 kalimat, 200-250 karakter):`;
     let caption = response.choices[0]?.message?.content?.trim() || '';
     caption = caption.replace(/^["']|["']$/g, '').replace(/\n+/g, ' ').trim();
     
-    // CTA yang lebih subtle
-    const cta = `\n\nmemenesia.web.id`;
-    const hashtags = '\n#Anime #Waifu #AnimeReview';
+    // REMOVED URL - Twitter blocks memenesia.web.id
+    const hashtags = '\n\n#Anime #Waifu #Hentai #WeebnesiaBOT';
     
-    const maxLen = 280 - cta.length - hashtags.length;
+    const maxLen = 280 - hashtags.length;
     if (caption.length > maxLen) {
       caption = caption.substring(0, maxLen - 3) + '...';
     }
     
-    return caption + cta + hashtags;
+    return caption + hashtags;
   } catch (error: any) {
     console.error('[Twitter] Caption generation error:', error.message);
     // Fallback caption
-    return `Baru kelar nonton ${title} dan gue harus bilang ini worth it banget. Art stylenya clean, karakternya likeable, ceritanya juga ada plot twist yang ga ketebak. Ada yang udah nonton juga?\n\nmemenesia.web.id\n#Anime #Waifu #AnimeReview`;
+    return `Baru kelar nonton ${title} dan gue harus bilang ini worth it banget. Art stylenya clean, karakternya likeable, ceritanya juga ada plot twist yang ga ketebak. Ada yang udah nonton juga?\n\n#Anime #Waifu #Hentai #WeebnesiaBOT`;
   }
 }
 
